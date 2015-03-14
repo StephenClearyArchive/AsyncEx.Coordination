@@ -3,7 +3,7 @@
     "authors": [ "Stephen Cleary" ],
     "dependencies": {
         "Nito.Collections.Deque": "1.0.0-alpha-*",
-        "Nito.Async.Tasks": "1.0.0-alpha-*"
+        "Nito.AsyncEx.Tasks": "1.0.0-alpha-*"
     },
 
     "compilationOptions": {
@@ -11,6 +11,7 @@
     },
 
     "frameworks": {
+        "net46": { },
         "aspnetcore50": {
             "dependencies": {
                 "System.Runtime": "4.0.20-beta-22523",
