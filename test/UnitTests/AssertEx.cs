@@ -5,12 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 /// <summary>
 /// Provides static methods useful for testing asynchronous methods and tasks.
 /// </summary>
-[ExcludeFromCodeCoverage]
 internal static class AssertEx
 {
     /// <summary>
@@ -28,9 +27,9 @@ internal static class AssertEx
         catch (Exception ex)
         {
             if (allowDerivedTypes && !(ex is TException))
-                Assert.Fail("Delegate threw exception of type " + ex.GetType().Name + ", but " + typeof(TException).Name + " or a derived type was expected.");
+                throw new Exception("Delegate threw exception of type " + ex.GetType().Name + ", but " + typeof(TException).Name + " or a derived type was expected.");
             if (!allowDerivedTypes && ex.GetType() != typeof(TException))
-                Assert.Fail("Delegate threw exception of type " + ex.GetType().Name + ", but " + typeof(TException).Name + " was expected.");
+                throw new Exception("Delegate threw exception of type " + ex.GetType().Name + ", but " + typeof(TException).Name + " was expected.");
         }
     }
 
@@ -56,14 +55,14 @@ internal static class AssertEx
         try
         {
             await action().ConfigureAwait(false);
-            Assert.Fail("Delegate did not throw expected exception " + typeof(TException).Name + ".");
+            throw new Exception("Delegate did not throw expected exception " + typeof(TException).Name + ".");
         }
         catch (Exception ex)
         {
             if (allowDerivedTypes && !(ex is TException))
-                Assert.Fail("Delegate threw exception of type " + ex.GetType().Name + ", but " + typeof(TException).Name + " or a derived type was expected.");
+                throw new Exception("Delegate threw exception of type " + ex.GetType().Name + ", but " + typeof(TException).Name + " or a derived type was expected.");
             if (!allowDerivedTypes && ex.GetType() != typeof(TException))
-                Assert.Fail("Delegate threw exception of type " + ex.GetType().Name + ", but " + typeof(TException).Name + " was expected.");
+                throw new Exception("Delegate threw exception of type " + ex.GetType().Name + ", but " + typeof(TException).Name + " was expected.");
         }
     }
 
@@ -75,11 +74,11 @@ internal static class AssertEx
     public static async Task NeverCompletesAsync(Task task, int timeout = 500)
     {
         if (task.IsCompleted)
-            Assert.Fail("Task completed unexpectedly.");
+            throw new Exception("Task completed unexpectedly.");
         var completedTask = await Task.WhenAny(task, Task.Delay(timeout)).ConfigureAwait(false);
         if (completedTask == task)
-            Assert.Fail("Task completed unexpectedly.");
-        var __ = task.ContinueWith(_ => Assert.Fail("Task completed unexpectedly."), TaskScheduler.Default);
+            throw new Exception("Task completed unexpectedly.");
+        var __ = task.ContinueWith(_ => { throw new Exception("Task completed unexpectedly."); }, TaskScheduler.Default);
     }
 
     /// <summary>
@@ -91,7 +90,7 @@ internal static class AssertEx
         try
         {
             await task.ConfigureAwait(false);
-            Assert.Fail("Task expected to cancel completed successfully.");
+            throw new Exception("Task expected to cancel completed successfully.");
         }
         catch (OperationCanceledException)
         {
@@ -99,7 +98,7 @@ internal static class AssertEx
         }
         catch (Exception ex)
         {
-            Assert.Fail("Task expected to cancel completed with failure: " + ex.GetType().ToString() + ": " + ex.Message);
+            throw new Exception("Task expected to cancel completed with failure: " + ex.GetType().ToString() + ": " + ex.Message);
         }
     }
 }

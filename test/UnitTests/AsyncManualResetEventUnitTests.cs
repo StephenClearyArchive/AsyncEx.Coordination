@@ -4,15 +4,13 @@ using Nito.AsyncEx;
 using System.Linq;
 using System.Threading;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace UnitTests
 {
-    [ExcludeFromCodeCoverage]
-    [TestClass]
     public class AsyncManualResetEventUnitTests
     {
-        [TestMethod]
+        [Fact]
         public async Task WaitAsync_Unset_IsNotCompleted()
         {
             var mre = new AsyncManualResetEvent();
@@ -22,7 +20,7 @@ namespace UnitTests
             await AssertEx.NeverCompletesAsync(task);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task Wait_Unset_IsNotCompleted()
         {
             var mre = new AsyncManualResetEvent();
@@ -32,7 +30,7 @@ namespace UnitTests
             await AssertEx.NeverCompletesAsync(task);
         }
 
-        [TestMethod]
+        [Fact]
         public void WaitAsync_AfterSet_IsCompleted()
         {
             var mre = new AsyncManualResetEvent();
@@ -40,10 +38,10 @@ namespace UnitTests
             mre.Set();
             var task = mre.WaitAsync();
             
-            Assert.IsTrue(task.IsCompleted);
+            Assert.True(task.IsCompleted);
         }
 
-        [TestMethod]
+        [Fact]
         public void Wait_AfterSet_IsCompleted()
         {
             var mre = new AsyncManualResetEvent();
@@ -52,17 +50,17 @@ namespace UnitTests
             mre.Wait();
         }
 
-        [TestMethod]
+        [Fact]
         public void WaitAsync_Set_IsCompleted()
         {
             var mre = new AsyncManualResetEvent(true);
 
             var task = mre.WaitAsync();
             
-            Assert.IsTrue(task.IsCompleted);
+            Assert.True(task.IsCompleted);
         }
 
-        [TestMethod]
+        [Fact]
         public void Wait_Set_IsCompleted()
         {
             var mre = new AsyncManualResetEvent(true);
@@ -70,7 +68,7 @@ namespace UnitTests
             mre.Wait();
         }
 
-        [TestMethod]
+        [Fact]
         public void MultipleWaitAsync_AfterSet_IsCompleted()
         {
             var mre = new AsyncManualResetEvent();
@@ -79,11 +77,11 @@ namespace UnitTests
             var task1 = mre.WaitAsync();
             var task2 = mre.WaitAsync();
             
-            Assert.IsTrue(task1.IsCompleted);
-            Assert.IsTrue(task2.IsCompleted);
+            Assert.True(task1.IsCompleted);
+            Assert.True(task2.IsCompleted);
         }
 
-        [TestMethod]
+        [Fact]
         public void MultipleWait_AfterSet_IsCompleted()
         {
             var mre = new AsyncManualResetEvent();
@@ -93,7 +91,7 @@ namespace UnitTests
             mre.Wait();
         }
 
-        [TestMethod]
+        [Fact]
         public void MultipleWaitAsync_Set_IsCompleted()
         {
             var mre = new AsyncManualResetEvent(true);
@@ -101,11 +99,11 @@ namespace UnitTests
             var task1 = mre.WaitAsync();
             var task2 = mre.WaitAsync();
             
-            Assert.IsTrue(task1.IsCompleted);
-            Assert.IsTrue(task2.IsCompleted);
+            Assert.True(task1.IsCompleted);
+            Assert.True(task2.IsCompleted);
         }
 
-        [TestMethod]
+        [Fact]
         public void MultipleWait_Set_IsCompleted()
         {
             var mre = new AsyncManualResetEvent(true);
@@ -114,7 +112,7 @@ namespace UnitTests
             mre.Wait();
         }
 
-        [TestMethod]
+        [Fact]
         public async Task WaitAsync_AfterReset_IsNotCompleted()
         {
             var mre = new AsyncManualResetEvent();
@@ -126,7 +124,7 @@ namespace UnitTests
             await AssertEx.NeverCompletesAsync(task);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task Wait_AfterReset_IsNotCompleted()
         {
             var mre = new AsyncManualResetEvent();
@@ -138,11 +136,11 @@ namespace UnitTests
             await AssertEx.NeverCompletesAsync(task);
         }
 
-        [TestMethod]
+        [Fact]
         public void Id_IsNotZero()
         {
             var mre = new AsyncManualResetEvent();
-            Assert.AreNotEqual(0, mre.Id);
+            Assert.NotEqual(0, mre.Id);
         }
     }
 }

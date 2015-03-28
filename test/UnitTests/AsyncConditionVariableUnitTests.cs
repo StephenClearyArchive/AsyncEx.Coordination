@@ -4,15 +4,13 @@ using Nito.AsyncEx;
 using System.Linq;
 using System.Threading;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace UnitTests
 {
-    [ExcludeFromCodeCoverage]
-    [TestClass]
     public class AsyncConditionVariableUnitTests
     {
-        [TestMethod]
+        [Fact]
         public async Task WaitAsync_WithoutNotify_IsNotCompleted()
         {
             var mutex = new AsyncLock();
@@ -24,7 +22,7 @@ namespace UnitTests
             await AssertEx.NeverCompletesAsync(task);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task WaitAsync_Notified_IsCompleted()
         {
             var mutex = new AsyncLock();
@@ -42,7 +40,7 @@ namespace UnitTests
             await task;
         }
 
-        [TestMethod]
+        [Fact]
         public async Task WaitAsync_AfterNotify_IsNotCompleted()
         {
             var mutex = new AsyncLock();
@@ -61,7 +59,7 @@ namespace UnitTests
             await AssertEx.NeverCompletesAsync(task);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task MultipleWaits_NotifyAll_AllAreCompleted()
         {
             var mutex = new AsyncLock();
@@ -85,7 +83,7 @@ namespace UnitTests
             await task2;
         }
 
-        [TestMethod]
+        [Fact]
         public async Task MultipleWaits_Notify_OneIsCompleted()
         {
             var mutex = new AsyncLock();
@@ -108,12 +106,12 @@ namespace UnitTests
             await AssertEx.NeverCompletesAsync(task2);
         }
 
-        [TestMethod]
+        [Fact]
         public void Id_IsNotZero()
         {
             var mutex = new AsyncLock();
             var cv = new AsyncConditionVariable(mutex);
-            Assert.AreNotEqual(0, cv.Id);
+            Assert.NotEqual(0, cv.Id);
         }
     }
 }

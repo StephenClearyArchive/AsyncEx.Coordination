@@ -5,15 +5,13 @@ using Nito.AsyncEx.Synchronous;
 using System.Linq;
 using System.Threading;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace UnitTests
 {
-    [ExcludeFromCodeCoverage]
-    [TestClass]
     public class AsyncAutoResetEventUnitTests
     {
-        [TestMethod]
+        [Fact]
         public async Task WaitAsync_Unset_IsNotCompleted()
         {
             var are = new AsyncAutoResetEvent();
@@ -23,7 +21,7 @@ namespace UnitTests
             await AssertEx.NeverCompletesAsync(task);
         }
 
-        [TestMethod]
+        [Fact]
         public void WaitAsync_AfterSet_CompletesSynchronously()
         {
             var are = new AsyncAutoResetEvent();
@@ -31,20 +29,20 @@ namespace UnitTests
             are.Set();
             var task = are.WaitAsync();
             
-            Assert.IsTrue(task.IsCompleted);
+            Assert.True(task.IsCompleted);
         }
 
-        [TestMethod]
+        [Fact]
         public void WaitAsync_Set_CompletesSynchronously()
         {
             var are = new AsyncAutoResetEvent(true);
 
             var task = are.WaitAsync();
             
-            Assert.IsTrue(task.IsCompleted);
+            Assert.True(task.IsCompleted);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task MultipleWaitAsync_AfterSet_OnlyOneIsCompleted()
         {
             var are = new AsyncAutoResetEvent();
@@ -53,11 +51,11 @@ namespace UnitTests
             var task1 = are.WaitAsync();
             var task2 = are.WaitAsync();
 
-            Assert.IsTrue(task1.IsCompleted);
+            Assert.True(task1.IsCompleted);
             await AssertEx.NeverCompletesAsync(task2);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task MultipleWaitAsync_Set_OnlyOneIsCompleted()
         {
             var are = new AsyncAutoResetEvent(true);
@@ -65,11 +63,11 @@ namespace UnitTests
             var task1 = are.WaitAsync();
             var task2 = are.WaitAsync();
 
-            Assert.IsTrue(task1.IsCompleted);
+            Assert.True(task1.IsCompleted);
             await AssertEx.NeverCompletesAsync(task2);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task MultipleWaitAsync_AfterMultipleSet_OnlyOneIsCompleted()
         {
             var are = new AsyncAutoResetEvent();
@@ -79,11 +77,11 @@ namespace UnitTests
             var task1 = are.WaitAsync();
             var task2 = are.WaitAsync();
 
-            Assert.IsTrue(task1.IsCompleted);
+            Assert.True(task1.IsCompleted);
             await AssertEx.NeverCompletesAsync(task2);
         }
 
-        [TestMethod]
+        [Fact]
         public void WaitAsync_PreCancelled_Set_SynchronouslyCompletesWait()
         {
             var are = new AsyncAutoResetEvent(true);
@@ -91,12 +89,12 @@ namespace UnitTests
             
             var task = are.WaitAsync(token);
 
-            Assert.IsTrue(task.IsCompleted);
-            Assert.IsFalse(task.IsCanceled);
-            Assert.IsFalse(task.IsFaulted);
+            Assert.True(task.IsCompleted);
+            Assert.False(task.IsCanceled);
+            Assert.False(task.IsFaulted);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task WaitAsync_Cancelled_DoesNotAutoReset()
         {
             var are = new AsyncAutoResetEvent();
@@ -111,7 +109,7 @@ namespace UnitTests
             await task2;
         }
 
-        [TestMethod]
+        [Fact]
         public void WaitAsync_PreCancelled_Unset_SynchronouslyCancels()
         {
             var are = new AsyncAutoResetEvent(false);
@@ -119,13 +117,13 @@ namespace UnitTests
 
             var task = are.WaitAsync(token);
 
-            Assert.IsTrue(task.IsCompleted);
-            Assert.IsTrue(task.IsCanceled);
-            Assert.IsFalse(task.IsFaulted);
+            Assert.True(task.IsCompleted);
+            Assert.True(task.IsCanceled);
+            Assert.False(task.IsFaulted);
         }
 
 #if TODO
-        [TestMethod]
+        [Fact]
         public void WaitAsyncFromCustomSynchronizationContext_PreCancelled_Unset_SynchronouslyCancels()
         {
             AsyncContext.Run(() =>
@@ -142,7 +140,7 @@ namespace UnitTests
         }
 #endif
 
-        [TestMethod]
+        [Fact]
         public async Task WaitAsync_Cancelled_ThrowsException()
         {
             var are = new AsyncAutoResetEvent();
@@ -152,11 +150,11 @@ namespace UnitTests
             await AssertEx.ThrowsExceptionAsync<OperationCanceledException>(task);
         }
 
-        [TestMethod]
+        [Fact]
         public void Id_IsNotZero()
         {
             var are = new AsyncAutoResetEvent();
-            Assert.AreNotEqual(0, are.Id);
+            Assert.NotEqual(0, are.Id);
         }
     }
 }

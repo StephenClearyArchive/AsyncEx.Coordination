@@ -2,28 +2,26 @@
 using System.Threading.Tasks;
 using System.Threading;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Nito.AsyncEx;
+using Xunit;
 
 namespace UnitTests
 {
-    [ExcludeFromCodeCoverage]
-    [TestClass]
     public class AsyncLockUnitTests
     {
-        [TestMethod]
+        [Fact]
         public void AsyncLock_Unlocked_SynchronouslyPermitsLock()
         {
             var mutex = new AsyncLock();
 
             var lockTask = mutex.LockAsync().AsTask();
 
-            Assert.IsTrue(lockTask.IsCompleted);
-            Assert.IsFalse(lockTask.IsFaulted);
-            Assert.IsFalse(lockTask.IsCanceled);
+            Assert.True(lockTask.IsCompleted);
+            Assert.False(lockTask.IsFaulted);
+            Assert.False(lockTask.IsCanceled);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task AsyncLock_Locked_PreventsLockUntilUnlocked()
         {
             var mutex = new AsyncLock();
@@ -46,12 +44,12 @@ namespace UnitTests
             });
             var task2 = await task2Start;
 
-            Assert.IsFalse(task2.IsCompleted);
+            Assert.False(task2.IsCompleted);
             task1Continue.SetResult(null);
             await task2;
         }
 
-        [TestMethod]
+        [Fact]
         public async Task AsyncLock_DoubleDispose_OnlyPermitsOneTask()
         {
             var mutex = new AsyncLock();
@@ -81,12 +79,12 @@ namespace UnitTests
             });
             var task2 = await task2Start;
 
-            Assert.IsFalse(task2.IsCompleted);
+            Assert.False(task2.IsCompleted);
             task1Continue.SetResult(null);
             await task2;
         }
 
-        [TestMethod]
+        [Fact]
         public async Task AsyncLock_Locked_OnlyPermitsOneLockerAtATime()
         {
             var mutex = new AsyncLock();
@@ -124,13 +122,13 @@ namespace UnitTests
             task1Continue.SetResult(null);
             await task2HasLock.Task;
 
-            Assert.IsFalse(task3.IsCompleted);
+            Assert.False(task3.IsCompleted);
             task2Continue.SetResult(null);
             await task2;
             await task3;
         }
 
-        [TestMethod]
+        [Fact]
         public void AsyncLock_PreCancelled_Unlocked_SynchronouslyTakesLock()
         {
             var mutex = new AsyncLock();
@@ -138,12 +136,12 @@ namespace UnitTests
 
             var task = mutex.LockAsync(token).AsTask();
 
-            Assert.IsTrue(task.IsCompleted);
-            Assert.IsFalse(task.IsCanceled);
-            Assert.IsFalse(task.IsFaulted);
+            Assert.True(task.IsCompleted);
+            Assert.False(task.IsCanceled);
+            Assert.False(task.IsFaulted);
         }
 
-        [TestMethod]
+        [Fact]
         public void AsyncLock_PreCancelled_Locked_SynchronouslyCancels()
         {
             var mutex = new AsyncLock();
@@ -152,12 +150,12 @@ namespace UnitTests
 
             var task = mutex.LockAsync(token).AsTask();
 
-            Assert.IsTrue(task.IsCompleted);
-            Assert.IsTrue(task.IsCanceled);
-            Assert.IsFalse(task.IsFaulted);
+            Assert.True(task.IsCompleted);
+            Assert.True(task.IsCanceled);
+            Assert.False(task.IsFaulted);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task AsyncLock_CancelledLock_LeavesLockUnlocked()
         {
             var mutex = new AsyncLock();
@@ -174,14 +172,14 @@ namespace UnitTests
             await taskReady.Task;
             cts.Cancel();
             await AssertEx.ThrowsExceptionAsync<OperationCanceledException>(task);
-            Assert.IsTrue(task.IsCanceled);
+            Assert.True(task.IsCanceled);
             unlock.Dispose();
 
             var finalLockTask = mutex.LockAsync();
             await finalLockTask;
         }
 
-        [TestMethod]
+        [Fact]
         public async Task AsyncLock_CanceledLock_ThrowsException()
         {
             var mutex = new AsyncLock();
@@ -194,7 +192,7 @@ namespace UnitTests
             await AssertEx.ThrowsExceptionAsync<OperationCanceledException>(canceledLockTask);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task AsyncLock_CanceledTooLate_StillTakesLock()
         {
             var mutex = new AsyncLock();
@@ -210,17 +208,17 @@ namespace UnitTests
             cts.Cancel();
 
             var nextLocker = mutex.LockAsync().AsTask();
-            Assert.IsFalse(nextLocker.IsCompleted);
+            Assert.False(nextLocker.IsCompleted);
 
             key.Dispose();
             await nextLocker;
         }
 
-        [TestMethod]
+        [Fact]
         public void Id_IsNotZero()
         {
             var mutex = new AsyncLock();
-            Assert.AreNotEqual(0, mutex.Id);
+            Assert.NotEqual(0, mutex.Id);
         }
     }
 }

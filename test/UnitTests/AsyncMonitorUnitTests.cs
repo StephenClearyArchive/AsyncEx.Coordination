@@ -4,15 +4,13 @@ using Nito.AsyncEx;
 using System.Linq;
 using System.Threading;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace UnitTests
 {
-    [ExcludeFromCodeCoverage]
-    [TestClass]
     public class AsyncMonitorUnitTests
     {
-        [TestMethod]
+        [Fact]
         public async Task Unlocked_PermitsLock()
         {
             var monitor = new AsyncMonitor();
@@ -21,7 +19,7 @@ namespace UnitTests
             await task;
         }
 
-        [TestMethod]
+        [Fact]
         public async Task Locked_PreventsLockUntilUnlocked()
         {
             var monitor = new AsyncMonitor();
@@ -39,12 +37,12 @@ namespace UnitTests
             await task1HasLock.Task;
 
             var lockTask = monitor.EnterAsync().AsTask();
-            Assert.IsFalse(lockTask.IsCompleted);
+            Assert.False(lockTask.IsCompleted);
             task1Continue.SetResult(null);
             await lockTask;
         }
 
-        [TestMethod]
+        [Fact]
         public async Task Pulse_ReleasesOneWaiter()
         {
             var monitor = new AsyncMonitor();
@@ -81,10 +79,10 @@ namespace UnitTests
             await Task.WhenAny(task1, task2);
             var result = Interlocked.CompareExchange(ref completed, 0, 0);
 
-            Assert.AreEqual(1, result);
+            Assert.Equal(1, result);
         }
 
-        [TestMethod]
+        [Fact]
         public async Task PulseAll_ReleasesAllWaiters()
         {
             var monitor = new AsyncMonitor();
@@ -124,14 +122,14 @@ namespace UnitTests
             await Task.WhenAll(task1, task2);
             var result = Interlocked.CompareExchange(ref completed, 0, 0);
 
-            Assert.AreEqual(2, result);
+            Assert.Equal(2, result);
         }
 
-        [TestMethod]
+        [Fact]
         public void Id_IsNotZero()
         {
             var monitor = new AsyncMonitor();
-            Assert.AreNotEqual(0, monitor.Id);
+            Assert.NotEqual(0, monitor.Id);
         }
     }
 }
