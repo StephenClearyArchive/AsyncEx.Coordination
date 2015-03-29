@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Diagnostics.CodeAnalysis;
 using Xunit;
+using Nito.AsyncEx.Testing;
 
 namespace UnitTests
 {
@@ -17,7 +18,7 @@ namespace UnitTests
 
             var task = mre.WaitAsync();
 
-            await AssertEx.NeverCompletesAsync(task);
+            await AsyncAssert.NeverCompletesAsync(task);
         }
 
         [Fact]
@@ -27,7 +28,7 @@ namespace UnitTests
 
             var task = Task.Run(() => mre.Wait());
 
-            await AssertEx.NeverCompletesAsync(task);
+            await AsyncAssert.NeverCompletesAsync(task);
         }
 
         [Fact]
@@ -121,7 +122,7 @@ namespace UnitTests
             mre.Reset();
             var task = mre.WaitAsync();
 
-            await AssertEx.NeverCompletesAsync(task);
+            await AsyncAssert.NeverCompletesAsync(task);
         }
 
         [Fact]
@@ -133,7 +134,7 @@ namespace UnitTests
             mre.Reset();
             var task = Task.Run(() => mre.Wait());
 
-            await AssertEx.NeverCompletesAsync(task);
+            await AsyncAssert.NeverCompletesAsync(task);
         }
 
         [Fact]

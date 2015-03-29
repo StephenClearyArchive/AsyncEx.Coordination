@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Diagnostics.CodeAnalysis;
 using Xunit;
+using Nito.AsyncEx.Testing;
 
 namespace UnitTests
 {
@@ -18,7 +19,7 @@ namespace UnitTests
 
             var task = are.WaitAsync();
 
-            await AssertEx.NeverCompletesAsync(task);
+            await AsyncAssert.NeverCompletesAsync(task);
         }
 
         [Fact]
@@ -52,7 +53,7 @@ namespace UnitTests
             var task2 = are.WaitAsync();
 
             Assert.True(task1.IsCompleted);
-            await AssertEx.NeverCompletesAsync(task2);
+            await AsyncAssert.NeverCompletesAsync(task2);
         }
 
         [Fact]
@@ -64,7 +65,7 @@ namespace UnitTests
             var task2 = are.WaitAsync();
 
             Assert.True(task1.IsCompleted);
-            await AssertEx.NeverCompletesAsync(task2);
+            await AsyncAssert.NeverCompletesAsync(task2);
         }
 
         [Fact]
@@ -78,7 +79,7 @@ namespace UnitTests
             var task2 = are.WaitAsync();
 
             Assert.True(task1.IsCompleted);
-            await AssertEx.NeverCompletesAsync(task2);
+            await AsyncAssert.NeverCompletesAsync(task2);
         }
 
         [Fact]
@@ -147,7 +148,7 @@ namespace UnitTests
             var cts = new CancellationTokenSource();
             cts.Cancel();
             var task = are.WaitAsync(cts.Token);
-            await AssertEx.ThrowsExceptionAsync<OperationCanceledException>(task);
+            await AsyncAssert.ThrowsAsync<OperationCanceledException>(task);
         }
 
         [Fact]

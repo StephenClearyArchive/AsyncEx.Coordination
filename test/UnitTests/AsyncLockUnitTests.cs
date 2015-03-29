@@ -4,6 +4,7 @@ using System.Threading;
 using System.Diagnostics.CodeAnalysis;
 using Nito.AsyncEx;
 using Xunit;
+using Nito.AsyncEx.Testing;
 
 namespace UnitTests
 {
@@ -171,7 +172,7 @@ namespace UnitTests
             });
             await taskReady.Task;
             cts.Cancel();
-            await AssertEx.ThrowsExceptionAsync<OperationCanceledException>(task);
+            await AsyncAssert.ThrowsAsync<OperationCanceledException>(task);
             Assert.True(task.IsCanceled);
             unlock.Dispose();
 
@@ -189,7 +190,7 @@ namespace UnitTests
             var canceledLockTask = mutex.LockAsync(cts.Token).AsTask();
             cts.Cancel();
 
-            await AssertEx.ThrowsExceptionAsync<OperationCanceledException>(canceledLockTask);
+            await AsyncAssert.ThrowsAsync<OperationCanceledException>(canceledLockTask);
         }
 
         [Fact]

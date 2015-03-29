@@ -4,6 +4,7 @@ using Nito.AsyncEx;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+using Nito.AsyncEx.Testing;
 
 namespace UnitTests
 {
@@ -50,7 +51,7 @@ namespace UnitTests
             var task2 = queue.Enqueue();
             queue.Dequeue();
             Assert.True(task1.IsCompleted);
-            await AssertEx.NeverCompletesAsync(task2);
+            await AsyncAssert.NeverCompletesAsync(task2);
         }
 
         [Fact]
@@ -142,7 +143,7 @@ namespace UnitTests
             var cts = new CancellationTokenSource();
             var task = queue.Enqueue(new object(), cts.Token);
             cts.Cancel();
-            await AssertEx.ThrowsExceptionAsync<OperationCanceledException>(task);
+            await AsyncAssert.ThrowsAsync<OperationCanceledException>(task);
         }
 
         [Fact]
@@ -152,7 +153,7 @@ namespace UnitTests
             var cts = new CancellationTokenSource();
             var task = queue.Enqueue(new object(), cts.Token);
             cts.Cancel();
-            await AssertEx.ThrowsExceptionAsync<OperationCanceledException>(task);
+            await AsyncAssert.ThrowsAsync<OperationCanceledException>(task);
             Assert.True(queue.IsEmpty);
         }
 

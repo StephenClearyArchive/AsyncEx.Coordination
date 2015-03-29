@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Diagnostics.CodeAnalysis;
 using Xunit;
+using Nito.AsyncEx.Testing;
 
 namespace UnitTests
 {
@@ -19,7 +20,7 @@ namespace UnitTests
             await mutex.LockAsync();
             var task = cv.WaitAsync();
 
-            await AssertEx.NeverCompletesAsync(task);
+            await AsyncAssert.NeverCompletesAsync(task);
         }
 
         [Fact]
@@ -56,7 +57,7 @@ namespace UnitTests
             await mutex.LockAsync();
             var task = cv.WaitAsync();
 
-            await AssertEx.NeverCompletesAsync(task);
+            await AsyncAssert.NeverCompletesAsync(task);
         }
 
         [Fact]
@@ -103,7 +104,7 @@ namespace UnitTests
             });
 
             await task1;
-            await AssertEx.NeverCompletesAsync(task2);
+            await AsyncAssert.NeverCompletesAsync(task2);
         }
 
         [Fact]

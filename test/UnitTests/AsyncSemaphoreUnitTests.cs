@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Diagnostics.CodeAnalysis;
 using Xunit;
+using Nito.AsyncEx.Testing;
 
 namespace UnitTests
 {
@@ -17,7 +18,7 @@ namespace UnitTests
             Assert.Equal(0, semaphore.CurrentCount);
             var task = semaphore.WaitAsync();
             Assert.Equal(0, semaphore.CurrentCount);
-            await AssertEx.NeverCompletesAsync(task);
+            await AsyncAssert.NeverCompletesAsync(task);
         }
 
         [Fact]
@@ -30,7 +31,7 @@ namespace UnitTests
             Assert.True(task1.IsCompleted);
             var task2 = semaphore.WaitAsync();
             Assert.Equal(0, semaphore.CurrentCount);
-            await AssertEx.NeverCompletesAsync(task2);
+            await AsyncAssert.NeverCompletesAsync(task2);
         }
 
         [Fact]
@@ -112,7 +113,7 @@ namespace UnitTests
         {
             var semaphore = new AsyncSemaphore(int.MaxValue);
             Assert.Equal(int.MaxValue, semaphore.CurrentCount);
-            AssertEx.ThrowsException<InvalidOperationException>(() => semaphore.Release());
+            AsyncAssert.Throws<InvalidOperationException>(() => semaphore.Release());
         }
 
         [Fact]
