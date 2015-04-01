@@ -94,7 +94,7 @@ namespace Nito.AsyncEx
             var waitTask = WaitAsync();
             if (waitTask.IsCompleted)
                 return waitTask;
-            return CancellationTokenTaskSource.WaitAsync(waitTask, cancellationToken);
+            return waitTask.WaitAsync(cancellationToken);
         }
 
         /// <summary>
