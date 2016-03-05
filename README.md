@@ -2,4 +2,6 @@
 
 Async-compatible coordination primitives, including `AsyncLock` and `AsyncManualResetEvent`.
 
+[API Docs](http://dotnetapis.com/pkg/Nito.AsyncEx.Coordination)
+
 [![NuGet Pre Release](https://img.shields.io/nuget/vpre/Nito.AsyncEx.Coordination.svg?style=plastic)](https://www.nuget.org/packages/Nito.AsyncEx.Coordination/)
