@@ -1,23 +1,22 @@
 {
-    "version": "1.0.0-alpha-4",
-    "authors": [ "Stephen Cleary" ],
-    "dependencies": {
-        "Nito.Collections.Deque": "1.0.0-alpha-*",
-        "Nito.AsyncEx.Tasks": "1.0.0-alpha-*"
-    },
+  "version": "1.0.0-beta-1",
+  "authors": [ "Stephen Cleary" ],
+  "dependencies": {
+    "Nito.Collections.Deque": "1.0.0-beta-*",
+    "Nito.AsyncEx.Tasks": "1.0.0-beta-*",
+    "System.Runtime": "4.0.21-beta-23516",
+    "System.Threading": "4.0.11-beta-23516",
+    "System.Threading.Tasks": "4.0.11-beta-23516"
+  },
 
-    "compilationOptions": {
-        "warningsAsErrors": true
-    },
+  "compilationOptions": {
+    "warningsAsErrors": true
+  },
 
-    "frameworks": {
-        "net46": { },
-        "aspnetcore50": {
-            "dependencies": {
-                "System.Runtime": "4.0.20-beta-22523",
-                "System.Threading.Tasks": "4.0.10.0-beta-22605",
-                "System.Threading": "4.0.10.0-beta-22605"
-            }
-        }
+  "frameworks": {
+    "net46": { },
+    "netcore50": {
+      "dependencies": {      }
     }
+  }
 }
