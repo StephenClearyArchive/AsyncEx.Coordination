@@ -1,18 +1,21 @@
 {
-  "version": "1.0.0-beta-1",
+  "version": "1.0.0-beta-2",
   "authors": [ "Stephen Cleary" ],
   "buildOptions": {
     "warningsAsErrors": true
   },
   "frameworks": {
     "net46": { },
-    "netstandard1.3": { }
+    "netstandard1.3": {
+      "dependencies": {
+        "System.Runtime": "4.1.0",
+        "System.Threading": "4.0.11",
+        "System.Threading.Tasks": "4.0.11"
+      }
+    }
   },
   "dependencies": {
     "Nito.Collections.Deque": "1.0.0-beta-2",
-    "Nito.AsyncEx.Tasks": "1.0.0-beta-2",
-    "System.Runtime": "4.1.0",
-    "System.Threading": "4.0.11",
-    "System.Threading.Tasks": "4.0.11"
+    "Nito.AsyncEx.Tasks": "1.0.0-beta-2"
   }
 }
