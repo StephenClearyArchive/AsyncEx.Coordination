@@ -88,6 +88,11 @@ namespace Nito.AsyncEx
             _mre.Wait(cancellationToken);
         }
 
+        public TryResult TryWait()
+        {
+            return _mre.TryWait();
+        }
+
         /// <summary>
         /// Attempts to modify the current count by the specified amount.
         /// </summary>

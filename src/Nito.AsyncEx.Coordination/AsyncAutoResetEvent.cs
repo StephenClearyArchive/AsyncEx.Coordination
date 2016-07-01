@@ -128,6 +128,19 @@ namespace Nito.AsyncEx
             Wait(CancellationToken.None);
         }
 
+        public TryResult TryWait()
+        {
+            lock (_mutex)
+            {
+                if (_set)
+                {
+                    _set = false;
+                    return new TryResult(true);
+                }
+            }
+            return new TryResult(false);
+        }
+
         /// <summary>
         /// Sets the event, atomically completing a task returned by <see cref="o:WaitAsync"/>. If the event is already set, this method does nothing.
         /// </summary>

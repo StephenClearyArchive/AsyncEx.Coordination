@@ -118,6 +118,20 @@ namespace Nito.AsyncEx
             }, CancellationToken.None, TaskContinuationOptions.OnlyOnCanceled | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
 
+        public DisposableTryResult TryReaderLock()
+        {
+            lock (_mutex)
+            {
+                // If the lock is available or in read mode and there are no waiting writers, upgradeable readers, or upgrading readers, take it immediately.
+                if (_locksHeld >= 0 && _writerQueue.IsEmpty)
+                {
+                    ++_locksHeld;
+                    return new DisposableTryResult(_cachedReaderKeyTask.Result);
+                }
+            }
+            return new DisposableTryResult();
+        }
+
         /// <summary>
         /// Asynchronously acquires the lock as a reader. Returns a disposable that releases the lock when disposed.
         /// </summary>
@@ -177,6 +191,20 @@ namespace Nito.AsyncEx
         public IDisposable ReaderLock()
         {
             return ReaderLock(CancellationToken.None);
+        }
+
+        public DisposableTryResult TryWriterLock()
+        {
+            lock (_mutex)
+            {
+                // If the lock is available, take it immediately.
+                if (_locksHeld == 0)
+                {
+                    _locksHeld = -1;
+                    return new DisposableTryResult(_cachedWriterKeyTask.Result);
+                }
+            }
+            return new DisposableTryResult();
         }
 
         /// <summary>

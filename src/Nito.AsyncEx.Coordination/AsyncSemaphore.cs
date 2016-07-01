@@ -72,6 +72,20 @@ namespace Nito.AsyncEx
             get { lock (_mutex) { return _count; } }
         }
 
+        public TryResult TryWait()
+        {
+            lock (_mutex)
+            {
+                // If the semaphore is available, take it immediately and return.
+                if (_count != 0)
+                {
+                    --_count;
+                    return new TryResult(true);
+                }
+            }
+            return new TryResult(false);
+        }
+
         /// <summary>
         /// Asynchronously waits for a slot in the semaphore to be available.
         /// </summary>

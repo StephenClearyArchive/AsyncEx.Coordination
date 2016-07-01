@@ -117,6 +117,11 @@ namespace Nito.AsyncEx
             ret.WaitAndUnwrapException(cancellationToken);
         }
 
+        public TryResult TryWait()
+        {
+            return new TryResult(IsSet);
+        }
+
         /// <summary>
         /// Sets the event, atomically completing every task returned by <see cref="WaitAsync"/>. If the event is already set, this method does nothing.
         /// </summary>

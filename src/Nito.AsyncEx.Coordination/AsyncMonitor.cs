@@ -82,6 +82,11 @@ namespace Nito.AsyncEx
             return Enter(CancellationToken.None);
         }
 
+        public DisposableTryResult TryEnter()
+        {
+            return _asyncLock.TryLock();
+        }
+
         /// <summary>
         /// Asynchronously waits for a pulse signal on this monitor. The monitor MUST already be entered when calling this method, and it will still be entered when this method returns, even if the method is cancelled. This method internally will leave the monitor while waiting for a notification.
         /// </summary>

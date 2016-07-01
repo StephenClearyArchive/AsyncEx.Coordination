@@ -131,6 +131,19 @@ namespace Nito.AsyncEx
             return Lock(CancellationToken.None);
         }
 
+        public DisposableTryResult TryLock()
+        {
+            lock (_mutex)
+            {
+                if (!_taken)
+                {
+                    _taken = true;
+                    return new DisposableTryResult(_cachedKeyTask.Result);
+                }
+            }
+            return new DisposableTryResult();
+        }
+
         /// <summary>
         /// Releases the lock.
         /// </summary>
