@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-delta-4",
+  "version": "1.0.0-delta-5",
   "description": "Asynchronous coordination primitives.",
   "authors": [ "Stephen Cleary" ],
   "buildOptions": {

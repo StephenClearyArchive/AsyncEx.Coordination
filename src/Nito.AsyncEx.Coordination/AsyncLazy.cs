@@ -12,14 +12,19 @@ namespace Nito.AsyncEx
     public enum AsyncLazyFlags
     {
         /// <summary>
-        /// No special flags. The factory method for <see cref="AsyncLazy{T}"/> is executed on the calling thread.
+        /// No special flags. The factory method is executed on a thread pool thread, and does not retry initialization on failures (failures are cached).
         /// </summary>
-        None = 0,
+        None = 0x0,
 
         /// <summary>
-        /// Execute the factory method for <see cref="AsyncLazy{T}"/> on a thread pool thread.
+        /// Execute the factory method on the calling thread.
         /// </summary>
-        ExecuteOnThreadPool = 1,
+        ExecuteOnCallingThread = 0x1,
+
+        /// <summary>
+        /// If the factory method fails, then re-run the factory method the next time instead of caching the failed task.
+        /// </summary>
+        RetryOnFailure = 0x2,
     }
 
     /// <summary>
@@ -31,9 +36,19 @@ namespace Nito.AsyncEx
     public sealed class AsyncLazy<T>
     {
         /// <summary>
+        /// The synchronization object protecting <c>_instance</c>.
+        /// </summary>
+        private readonly object _mutex;
+
+        /// <summary>
+        /// The factory method to call.
+        /// </summary>
+        private readonly Func<Task<T>> _factory;
+
+        /// <summary>
         /// The underlying lazy task.
         /// </summary>
-        private readonly Lazy<Task<T>> _instance;
+        private Lazy<Task<T>> _instance;
 
         /// <summary>
         /// The semi-unique identifier for this instance. This is 0 if the id has not yet been created.
@@ -59,11 +74,14 @@ namespace Nito.AsyncEx
         /// <param name="factory">The asynchronous delegate that is invoked to produce the value when it is needed. May not be <c>null</c>.</param>
         public AsyncLazy(Func<Task<T>> factory, AsyncLazyFlags flags = AsyncLazyFlags.None)
         {
-            var func = factory;
-            if ((flags & AsyncLazyFlags.ExecuteOnThreadPool) == AsyncLazyFlags.ExecuteOnThreadPool)
-                func = () => System.Threading.Tasks.Task.Run(factory);
+            _factory = factory;
+            if ((flags & AsyncLazyFlags.RetryOnFailure) == AsyncLazyFlags.RetryOnFailure)
+                _factory = RetryOnFailure(_factory);
+            if ((flags & AsyncLazyFlags.ExecuteOnCallingThread) != AsyncLazyFlags.ExecuteOnCallingThread)
+                _factory = RunOnThreadPool(_factory);
 
-            _instance = new Lazy<Task<T>>(func);
+            _mutex = new object();
+            _instance = new Lazy<Task<T>>(_factory);
         }
 
         /// <summary>
@@ -88,6 +106,30 @@ namespace Nito.AsyncEx
         public Task<T> Task
         {
             get { return _instance.Value; }
+        }
+
+        private Func<Task<T>> RetryOnFailure(Func<Task<T>> factory)
+        {
+            return async () =>
+            {
+                try
+                {
+                    return await factory().ConfigureAwait(false);
+                }
+                catch
+                {
+                    lock (_mutex)
+                    {
+                        _instance = new Lazy<Task<T>>(_factory);
+                    }
+                    throw;
+                }
+            };
+        }
+
+        private Func<Task<T>> RunOnThreadPool(Func<Task<T>> factory)
+        {
+            return () => System.Threading.Tasks.Task.Run(factory);
         }
 
         /// <summary>
