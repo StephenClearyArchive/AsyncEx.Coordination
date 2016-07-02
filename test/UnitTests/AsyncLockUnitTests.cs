@@ -39,11 +39,10 @@ namespace UnitTests
             });
             await task1HasLock.Task;
 
-            var task2Start = Task.Factory.StartNew(async () =>
+            var task2 = Task.Run(async () =>
             {
                 await mutex.LockAsync();
             });
-            var task2 = await task2Start;
 
             Assert.False(task2.IsCompleted);
             task1Continue.SetResult(null);
@@ -74,11 +73,10 @@ namespace UnitTests
             });
             await task1HasLock.Task;
 
-            var task2Start = Task.Factory.StartNew(async () =>
+            var task2 = Task.Run(async () =>
             {
                 await mutex.LockAsync();
             });
-            var task2 = await task2Start;
 
             Assert.False(task2.IsCompleted);
             task1Continue.SetResult(null);
@@ -104,7 +102,7 @@ namespace UnitTests
             });
             await task1HasLock.Task;
 
-            var task2Start = Task.Factory.StartNew(async () =>
+            var task2 = Task.Run(async () =>
             {
                 using (await mutex.LockAsync())
                 {
@@ -112,13 +110,11 @@ namespace UnitTests
                     await task2Continue.Task;
                 }
             });
-            var task2 = await task2Start;
 
-            var task3Start = Task.Factory.StartNew(async () =>
+            var task3 = Task.Run(async () =>
             {
                 await mutex.LockAsync();
             });
-            var task3 = await task3Start;
 
             task1Continue.SetResult(null);
             await task2HasLock.Task;
