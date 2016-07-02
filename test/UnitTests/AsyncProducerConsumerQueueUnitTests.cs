@@ -57,11 +57,11 @@ namespace UnitTests
         }
 
         [Fact]
-        public async Task TryEnqueueAsync_SpaceAvailable_EnqueuesItem()
+        public async Task AttemptEnqueueAsync_SpaceAvailable_EnqueuesItem()
         {
             var queue = new AsyncProducerConsumerQueue<int>();
 
-            var result = await queue.TryEnqueueAsync(3);
+            var result = await queue.AttemptEnqueueAsync(3);
             var dequeueResult = await queue.DequeueAsync();
 
             Assert.True(result);
@@ -69,12 +69,12 @@ namespace UnitTests
         }
 
         [Fact]
-        public async Task TryEnqueueAsync_CompleteAdding_ReturnsFailed()
+        public async Task AttemptEnqueueAsync_CompleteAdding_ReturnsFailed()
         {
             var queue = new AsyncProducerConsumerQueue<int>();
             queue.CompleteAdding();
 
-            var result = await queue.TryEnqueueAsync(3);
+            var result = await queue.AttemptEnqueueAsync(3);
 
             Assert.False(result);
         }
@@ -98,12 +98,12 @@ namespace UnitTests
         }
 
         [Fact]
-        public async Task TryDequeueAsync_EmptyAndComplete_ReturnsFailed()
+        public async Task AttemptDequeueAsync_EmptyAndComplete_ReturnsFailed()
         {
             var queue = new AsyncProducerConsumerQueue<int>();
             queue.CompleteAdding();
 
-            var result = await queue.TryDequeueAsync();
+            var result = await queue.AttemptDequeueAsync();
 
             Assert.False(result.IsSuccess);
         }
@@ -119,11 +119,11 @@ namespace UnitTests
         }
 
         [Fact]
-        public async Task TryDequeueAsync_Empty_DoesNotComplete()
+        public async Task AttemptDequeueAsync_Empty_DoesNotComplete()
         {
             var queue = new AsyncProducerConsumerQueue<int>();
 
-            var task = queue.TryDequeueAsync();
+            var task = queue.AttemptDequeueAsync();
 
             await AsyncAssert.NeverCompletesAsync(task);
         }
@@ -141,11 +141,11 @@ namespace UnitTests
         }
 
         [Fact]
-        public async Task TryDequeueAsync_Cancelled_Throws()
+        public async Task AttemptDequeueAsync_Cancelled_Throws()
         {
             var queue = new AsyncProducerConsumerQueue<int>();
             var cts = new CancellationTokenSource();
-            var task = queue.TryDequeueAsync(cts.Token);
+            var task = queue.AttemptDequeueAsync(cts.Token);
 
             cts.Cancel();
 
@@ -175,11 +175,11 @@ namespace UnitTests
         }
 
         [Fact]
-        public async Task TryEnqueueAsync_Full_DoesNotComplete()
+        public async Task AttemptEnqueueAsync_Full_DoesNotComplete()
         {
             var queue = new AsyncProducerConsumerQueue<int>(new[] { 13 }, 1);
 
-            var task = queue.TryEnqueueAsync(7);
+            var task = queue.AttemptEnqueueAsync(7);
 
             await AsyncAssert.NeverCompletesAsync(task);
         }
@@ -196,10 +196,10 @@ namespace UnitTests
         }
 
         [Fact]
-        public async Task TryEnqueueAsync_SpaceAvailable_Completes()
+        public async Task AttemptEnqueueAsync_SpaceAvailable_Completes()
         {
             var queue = new AsyncProducerConsumerQueue<int>(new[] { 13 }, 1);
-            var task = queue.TryEnqueueAsync(7);
+            var task = queue.AttemptEnqueueAsync(7);
 
             await queue.DequeueAsync();
             var result = await task;
@@ -208,11 +208,11 @@ namespace UnitTests
         }
 
         [Fact]
-        public async Task TryEnqueueAsync_Cancelled_Throws()
+        public async Task AttemptEnqueueAsync_Cancelled_Throws()
         {
             var queue = new AsyncProducerConsumerQueue<int>(new[] { 13 }, 1);
             var cts = new CancellationTokenSource();
-            var task = queue.TryEnqueueAsync(7, cts.Token);
+            var task = queue.AttemptEnqueueAsync(7, cts.Token);
 
             cts.Cancel();
 
