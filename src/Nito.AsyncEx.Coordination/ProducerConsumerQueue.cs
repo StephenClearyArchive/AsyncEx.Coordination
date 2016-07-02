@@ -249,9 +249,9 @@ namespace Nito.AsyncEx
             while (true)
             {
                 var result = TryDequeue(cancellationToken);
-                if (!result.Success)
+                if (!result.IsSuccess)
                     yield break;
-                yield return result.Item;
+                yield return result.Result;
             }
         }
 
@@ -267,17 +267,17 @@ namespace Nito.AsyncEx
         /// Attempts to dequeue an item.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token that can be used to abort the dequeue operation.</param>
-        public async Task<DequeueResult> TryDequeueAsync(CancellationToken cancellationToken)
+        public async Task<TryResult<T>> TryDequeueAsync(CancellationToken cancellationToken)
         {
             using (await _mutex.LockAsync().ConfigureAwait(false))
             {
                 while (Empty && !_completed)
                     await _completedOrNotEmpty.WaitAsync(cancellationToken).ConfigureAwait(false);
                 if (_completed && Empty)
-                    return new DequeueResult(false, default(T));
+                    return new TryResult<T>();
                 var item = _queue.Dequeue();
                 _completedOrNotFull.Notify();
-                return new DequeueResult(true, item);
+                return new TryResult<T>(true, item);
             }
         }
 
@@ -285,24 +285,24 @@ namespace Nito.AsyncEx
         /// Attempts to dequeue an item. This method may block the calling thread.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token that can be used to abort the dequeue operation.</param>
-        public DequeueResult TryDequeue(CancellationToken cancellationToken)
+        public TryResult<T> TryDequeue(CancellationToken cancellationToken)
         {
             using (_mutex.Lock())
             {
                 while (Empty && !_completed)
                     _completedOrNotEmpty.Wait(cancellationToken);
                 if (_completed && Empty)
-                    return new DequeueResult(false, default(T));
+                    return new TryResult<T>();
                 var item = _queue.Dequeue();
                 _completedOrNotFull.Notify();
-                return new DequeueResult(true, item);
+                return new TryResult<T>(true, item);
             }
         }
 
         /// <summary>
         /// Attempts to dequeue an item from the producer/consumer queue.
         /// </summary>
-        public Task<DequeueResult> TryDequeueAsync()
+        public Task<TryResult<T>> TryDequeueAsync()
         {
             return TryDequeueAsync(CancellationToken.None);
         }
@@ -310,7 +310,7 @@ namespace Nito.AsyncEx
         /// <summary>
         /// Attempts to dequeue an item from the producer/consumer queue. This method may block the calling thread.
         /// </summary>
-        public DequeueResult TryDequeue()
+        public TryResult<T> TryDequeue()
         {
             return TryDequeue(CancellationToken.None);
         }
@@ -323,9 +323,9 @@ namespace Nito.AsyncEx
         public async Task<T> DequeueAsync(CancellationToken cancellationToken)
         {
             var ret = await TryDequeueAsync(cancellationToken).ConfigureAwait(false);
-            if (!ret.Success)
+            if (!ret.IsSuccess)
                 throw new InvalidOperationException("Dequeue failed; the producer/consumer queue has completed adding and is empty.");
-            return ret.Item;
+            return ret.Result;
         }
 
         /// <summary>
@@ -335,9 +335,9 @@ namespace Nito.AsyncEx
         public T Dequeue(CancellationToken cancellationToken)
         {
             var ret = TryDequeue(cancellationToken);
-            if (!ret.Success)
+            if (!ret.IsSuccess)
                 throw new InvalidOperationException("Dequeue failed; the producer/consumer queue has completed adding and is empty.");
-            return ret.Item;
+            return ret.Result;
         }
 
         /// <summary>
@@ -373,19 +373,6 @@ namespace Nito.AsyncEx
             {
                 get { return _queue._queue.ToArray(); }
             }
-        }
-
-        public sealed class DequeueResult
-        {
-            public DequeueResult(bool isSuccess, T value)
-            {
-                Success = isSuccess;
-                Item = value;
-            }
-
-            public bool Success { get; }
-
-            public T Item { get; }
         }
     }
 }

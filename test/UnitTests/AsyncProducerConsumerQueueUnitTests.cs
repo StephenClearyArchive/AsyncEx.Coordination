@@ -105,7 +105,7 @@ namespace UnitTests
 
             var result = await queue.TryDequeueAsync();
 
-            Assert.False(result.Success);
+            Assert.False(result.IsSuccess);
         }
 
         [Fact]
