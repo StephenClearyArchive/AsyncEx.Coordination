@@ -112,6 +112,32 @@ namespace Nito.AsyncEx
             }
         }
 
+        public TryResult<bool> TryAttemptEnqueue(T item)
+        {
+            using (_mutex.Lock())
+            {
+                if (_completed)
+                    return new TryResult<bool>(true, false);
+
+                if (Full)
+                    return new TryResult<bool>();
+
+                _queue.Enqueue(item);
+                _completedOrNotEmpty.Notify();
+                return new TryResult<bool>(true, true);
+            }
+        }
+
+        public TryResult TryEnqueue(T item)
+        {
+            var result = TryAttemptEnqueue(item);
+            if (!result.IsSuccess)
+                return new TryResult();
+            if (!result.Result)
+                throw new InvalidOperationException("Enqueue failed; the producer/consumer queue has completed adding.");
+            return new TryResult(true);
+        }
+
         /// <summary>
         /// Attempts to enqueue an item.
         /// </summary>
@@ -218,6 +244,18 @@ namespace Nito.AsyncEx
             Enqueue(item, CancellationToken.None);
         }
 
+        public TryResult<bool> TryOutputAvailable()
+        {
+            using (_mutex.Lock())
+            {
+                if (_completed)
+                    return new TryResult<bool>(true, false);
+                if (!Empty)
+                    return new TryResult<bool>(true, true);
+                return new TryResult<bool>();
+            }
+        }
+
         /// <summary>
         /// Asynchronously waits until an item is available to dequeue. Returns <c>false</c> if the producer/consumer queue has completed adding and there are no more items.
         /// </summary>
@@ -261,6 +299,30 @@ namespace Nito.AsyncEx
         public IEnumerable<T> GetConsumingEnumerable()
         {
             return GetConsumingEnumerable(CancellationToken.None);
+        }
+
+        public TryResult<TryResult<T>> TryAttemptDequeue()
+        {
+            using (_mutex.Lock())
+            {
+                if (_completed && Empty)
+                    return new TryResult<TryResult<T>>(true, new TryResult<T>());
+                if (Empty)
+                    return new TryResult<TryResult<T>>();
+                var item = _queue.Dequeue();
+                _completedOrNotFull.Notify();
+                return new TryResult<TryResult<T>>(true, new TryResult<T>(true, item));
+            }
+        }
+
+        public TryResult<T> TryDequeue()
+        {
+            var result = TryAttemptDequeue();
+            if (!result.IsSuccess)
+                return new TryResult<T>();
+            if (!result.Result.IsSuccess)
+                throw new InvalidOperationException("Dequeue failed; the producer/consumer queue has completed adding and is empty.");
+            return result.Result;
         }
 
         /// <summary>
