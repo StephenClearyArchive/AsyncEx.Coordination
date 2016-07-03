@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Nito.AsyncEx.Synchronous;
 
 namespace Nito.AsyncEx
 {
@@ -100,7 +101,7 @@ namespace Nito.AsyncEx
         private bool Full { get { return _queue.Count == _maxCount; } }
 
         /// <summary>
-        /// Synchronously marks the producer/consumer queue as complete for adding.
+        /// Marks the producer/consumer queue as complete for adding.
         /// </summary>
         public void CompleteAdding()
         {
@@ -113,67 +114,31 @@ namespace Nito.AsyncEx
         }
 
         /// <summary>
-        /// Attempts to enqueue an item.
+        /// Enqueues an item to the producer/consumer queue. Throws <see cref="InvalidOperationException"/> if the producer/consumer queue has completed adding.
         /// </summary>
         /// <param name="item">The item to enqueue.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to abort the enqueue operation.</param>
-        public async Task<bool> TryEnqueueAsync(T item, CancellationToken cancellationToken)
+        /// <param name="sync">Whether to run this method synchronously.</param>
+        private async Task DoEnqueueAsync(T item, CancellationToken cancellationToken, bool sync)
         {
-            using (await _mutex.LockAsync().ConfigureAwait(false))
+            using (sync ? _mutex.Lock() : await _mutex.LockAsync().ConfigureAwait(false))
             {
                 // Wait for the queue to be not full.
                 while (Full && !_completed)
-                    await _completedOrNotFull.WaitAsync(cancellationToken).ConfigureAwait(false);
+                {
+                    if (sync)
+                        _completedOrNotFull.Wait();
+                    else
+                        await _completedOrNotFull.WaitAsync(cancellationToken).ConfigureAwait(false);
+                }
 
                 // If the queue has been marked complete, then abort.
                 if (_completed)
-                    return false;
+                    throw new InvalidOperationException("Enqueue failed; the producer/consumer queue has completed adding.");
 
                 _queue.Enqueue(item);
                 _completedOrNotEmpty.Notify();
-                return true;
             }
-        }
-
-        /// <summary>
-        /// Attempts to enqueue an item. This method may block the calling thread.
-        /// </summary>
-        /// <param name="item">The item to enqueue.</param>
-        /// <param name="cancellationToken">A cancellation token that can be used to abort the enqueue operation.</param>
-        public bool TryEnqueue(T item, CancellationToken cancellationToken)
-        {
-            using (_mutex.Lock())
-            {
-                // Wait for the queue to be not full.
-                while (Full && !_completed)
-                    _completedOrNotFull.Wait(cancellationToken);
-
-                // If the queue has been marked complete, then abort.
-                if (_completed)
-                    return false;
-
-                _queue.Enqueue(item);
-                _completedOrNotEmpty.Notify();
-                return true;
-            }
-        }
-
-        /// <summary>
-        /// Attempts to enqueue an item to the producer/consumer queue. Returns <c>false</c> if the producer/consumer queue has completed adding.
-        /// </summary>
-        /// <param name="item">The item to enqueue.</param>
-        public Task<bool> TryEnqueueAsync(T item)
-        {
-            return TryEnqueueAsync(item, CancellationToken.None);
-        }
-
-        /// <summary>
-        /// Attempts to enqueue an item to the producer/consumer queue. Returns <c>false</c> if the producer/consumer queue has completed adding. This method may block the calling thread.
-        /// </summary>
-        /// <param name="item">The item to enqueue.</param>
-        public bool TryEnqueue(T item)
-        {
-            return TryEnqueue(item, CancellationToken.None);
         }
 
         /// <summary>
@@ -181,29 +146,17 @@ namespace Nito.AsyncEx
         /// </summary>
         /// <param name="item">The item to enqueue.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to abort the enqueue operation.</param>
-        public async Task EnqueueAsync(T item, CancellationToken cancellationToken)
+        /// <exception cref="InvalidOperationException">The producer/consumer queue has been marked complete for adding.</exception>
+        public Task EnqueueAsync(T item, CancellationToken cancellationToken)
         {
-            var result = await TryEnqueueAsync(item, cancellationToken).ConfigureAwait(false);
-            if (!result)
-                throw new InvalidOperationException("Enqueue failed; the producer/consumer queue has completed adding.");
-        }
-
-        /// <summary>
-        /// Enqueues an item to the producer/consumer queue. Throws <see cref="InvalidOperationException"/> if the producer/consumer queue has completed adding. This method may block the calling thread.
-        /// </summary>
-        /// <param name="item">The item to enqueue.</param>
-        /// <param name="cancellationToken">A cancellation token that can be used to abort the enqueue operation.</param>
-        public void Enqueue(T item, CancellationToken cancellationToken)
-        {
-            var result = TryEnqueue(item, cancellationToken);
-            if (!result)
-                throw new InvalidOperationException("Enqueue failed; the producer/consumer queue has completed adding.");
+            return DoEnqueueAsync(item, cancellationToken, sync: false);
         }
 
         /// <summary>
         /// Enqueues an item to the producer/consumer queue. Throws <see cref="InvalidOperationException"/> if the producer/consumer queue has completed adding.
         /// </summary>
         /// <param name="item">The item to enqueue.</param>
+        /// <exception cref="InvalidOperationException">The producer/consumer queue has been marked complete for adding.</exception>
         public Task EnqueueAsync(T item)
         {
             return EnqueueAsync(item, CancellationToken.None);
@@ -213,23 +166,50 @@ namespace Nito.AsyncEx
         /// Enqueues an item to the producer/consumer queue. This method may block the calling thread. Throws <see cref="InvalidOperationException"/> if the producer/consumer queue has completed adding.
         /// </summary>
         /// <param name="item">The item to enqueue.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to abort the enqueue operation.</param>
+        /// <exception cref="InvalidOperationException">The producer/consumer queue has been marked complete for adding.</exception>
+        public void Enqueue(T item, CancellationToken cancellationToken)
+        {
+            DoEnqueueAsync(item, cancellationToken, sync: true).WaitAndUnwrapException();
+        }
+
+        /// <summary>
+        /// Enqueues an item to the producer/consumer queue. This method may block the calling thread. Throws <see cref="InvalidOperationException"/> if the producer/consumer queue has completed adding.
+        /// </summary>
+        /// <param name="item">The item to enqueue.</param>
+        /// <exception cref="InvalidOperationException">The producer/consumer queue has been marked complete for adding.</exception>
         public void Enqueue(T item)
         {
             Enqueue(item, CancellationToken.None);
         }
 
         /// <summary>
+        /// Waits until an item is available to dequeue. Returns <c>false</c> if the producer/consumer queue has completed adding and there are no more items.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token that can be used to abort the asynchronous wait.</param>
+        /// <param name="sync">Whether to run this method synchronously.</param>
+        private async Task<bool> DoOutputAvailableAsync(CancellationToken cancellationToken, bool sync)
+        {
+            using (sync ? _mutex.Lock() : await _mutex.LockAsync().ConfigureAwait(false))
+            {
+                while (Empty && !_completed)
+                {
+                    if (sync)
+                        _completedOrNotEmpty.Wait();
+                    else
+                        await _completedOrNotEmpty.WaitAsync(cancellationToken).ConfigureAwait(false);
+                }
+                return !Empty;
+            }
+        }
+
+        /// <summary>
         /// Asynchronously waits until an item is available to dequeue. Returns <c>false</c> if the producer/consumer queue has completed adding and there are no more items.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token that can be used to abort the asynchronous wait.</param>
-        public async Task<bool> OutputAvailableAsync(CancellationToken cancellationToken)
+        public Task<bool> OutputAvailableAsync(CancellationToken cancellationToken)
         {
-            using (await _mutex.LockAsync().ConfigureAwait(false))
-            {
-                while (Empty && !_completed)
-                    await _completedOrNotEmpty.WaitAsync(cancellationToken).ConfigureAwait(false);
-                return !Empty;
-            }
+            return DoOutputAvailableAsync(cancellationToken, sync: false);
         }
 
         /// <summary>
@@ -241,6 +221,23 @@ namespace Nito.AsyncEx
         }
 
         /// <summary>
+        /// Synchronously waits until an item is available to dequeue. Returns <c>false</c> if the producer/consumer queue has completed adding and there are no more items.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token that can be used to abort the asynchronous wait.</param>
+        public bool OutputAvailable(CancellationToken cancellationToken)
+        {
+            return DoOutputAvailableAsync(cancellationToken, sync: true).WaitAndUnwrapException();
+        }
+
+        /// <summary>
+        /// Synchronously waits until an item is available to dequeue. Returns <c>false</c> if the producer/consumer queue has completed adding and there are no more items.
+        /// </summary>
+        public bool OutputAvailable()
+        {
+            return OutputAvailable(CancellationToken.None);
+        }
+
+        /// <summary>
         /// Provides a (synchronous) consuming enumerable for items in the producer/consumer queue.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token that can be used to abort the synchronous enumeration.</param>
@@ -248,10 +245,16 @@ namespace Nito.AsyncEx
         {
             while (true)
             {
-                var result = TryDequeue(cancellationToken);
-                if (!result.Success)
+                T item;
+                try
+                {
+                    item = Dequeue(cancellationToken);
+                }
+                catch (InvalidOperationException)
+                {
                     yield break;
-                yield return result.Item;
+                }
+                yield return item;
             }
         }
 
@@ -264,86 +267,48 @@ namespace Nito.AsyncEx
         }
 
         /// <summary>
-        /// Attempts to dequeue an item.
+        /// Dequeues an item from the producer/consumer queue. Throws <see cref="InvalidOperationException"/> if the producer/consumer queue has completed adding and is empty.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token that can be used to abort the dequeue operation.</param>
-        public async Task<DequeueResult> TryDequeueAsync(CancellationToken cancellationToken)
+        /// <param name="sync">Whether to run this method synchronously.</param>
+        /// <exception cref="InvalidOperationException">The producer/consumer queue has been marked complete for adding and is empty.</exception>
+        private async Task<T> DoDequeueAsync(CancellationToken cancellationToken, bool sync)
         {
-            using (await _mutex.LockAsync().ConfigureAwait(false))
+            using (sync ? _mutex.Lock() : await _mutex.LockAsync().ConfigureAwait(false))
             {
                 while (Empty && !_completed)
-                    await _completedOrNotEmpty.WaitAsync(cancellationToken).ConfigureAwait(false);
+                {
+                    if (sync)
+                        _completedOrNotEmpty.Wait();
+                    else
+                        await _completedOrNotEmpty.WaitAsync(cancellationToken).ConfigureAwait(false);
+                }
+
                 if (_completed && Empty)
-                    return new DequeueResult(false, default(T));
+                    throw new InvalidOperationException("Dequeue failed; the producer/consumer queue has completed adding and is empty.");
+
                 var item = _queue.Dequeue();
                 _completedOrNotFull.Notify();
-                return new DequeueResult(true, item);
+                return item;
             }
         }
 
         /// <summary>
-        /// Attempts to dequeue an item. This method may block the calling thread.
-        /// </summary>
-        /// <param name="cancellationToken">A cancellation token that can be used to abort the dequeue operation.</param>
-        public DequeueResult TryDequeue(CancellationToken cancellationToken)
-        {
-            using (_mutex.Lock())
-            {
-                while (Empty && !_completed)
-                    _completedOrNotEmpty.Wait(cancellationToken);
-                if (_completed && Empty)
-                    return new DequeueResult(false, default(T));
-                var item = _queue.Dequeue();
-                _completedOrNotFull.Notify();
-                return new DequeueResult(true, item);
-            }
-        }
-
-        /// <summary>
-        /// Attempts to dequeue an item from the producer/consumer queue.
-        /// </summary>
-        public Task<DequeueResult> TryDequeueAsync()
-        {
-            return TryDequeueAsync(CancellationToken.None);
-        }
-
-        /// <summary>
-        /// Attempts to dequeue an item from the producer/consumer queue. This method may block the calling thread.
-        /// </summary>
-        public DequeueResult TryDequeue()
-        {
-            return TryDequeue(CancellationToken.None);
-        }
-
-        /// <summary>
-        /// Dequeues an item from the producer/consumer queue. Returns the dequeued item. Throws <see cref="InvalidOperationException"/> if the producer/consumer queue has completed adding and is empty.
+        /// Dequeues an item from the producer/consumer queue. Throws <see cref="InvalidOperationException"/> if the producer/consumer queue has completed adding and is empty.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token that can be used to abort the dequeue operation.</param>
         /// <returns>The dequeued item.</returns>
-        public async Task<T> DequeueAsync(CancellationToken cancellationToken)
+        /// <exception cref="InvalidOperationException">The producer/consumer queue has been marked complete for adding and is empty.</exception>
+        public Task<T> DequeueAsync(CancellationToken cancellationToken)
         {
-            var ret = await TryDequeueAsync(cancellationToken).ConfigureAwait(false);
-            if (!ret.Success)
-                throw new InvalidOperationException("Dequeue failed; the producer/consumer queue has completed adding and is empty.");
-            return ret.Item;
-        }
-
-        /// <summary>
-        /// Dequeues an item from the producer/consumer queue. Returns the dequeued item. This method may block the calling thread. Throws <see cref="InvalidOperationException"/> if the producer/consumer queue has completed adding and is empty.
-        /// </summary>
-        /// <param name="cancellationToken">A cancellation token that can be used to abort the dequeue operation.</param>
-        public T Dequeue(CancellationToken cancellationToken)
-        {
-            var ret = TryDequeue(cancellationToken);
-            if (!ret.Success)
-                throw new InvalidOperationException("Dequeue failed; the producer/consumer queue has completed adding and is empty.");
-            return ret.Item;
+            return DoDequeueAsync(cancellationToken, sync: false);
         }
 
         /// <summary>
         /// Dequeues an item from the producer/consumer queue. Returns the dequeued item. Throws <see cref="InvalidOperationException"/> if the producer/consumer queue has completed adding and is empty.
         /// </summary>
         /// <returns>The dequeued item.</returns>
+        /// <exception cref="InvalidOperationException">The producer/consumer queue has been marked complete for adding and is empty.</exception>
         public Task<T> DequeueAsync()
         {
             return DequeueAsync(CancellationToken.None);
@@ -352,7 +317,19 @@ namespace Nito.AsyncEx
         /// <summary>
         /// Dequeues an item from the producer/consumer queue. Returns the dequeued item. This method may block the calling thread. Throws <see cref="InvalidOperationException"/> if the producer/consumer queue has completed adding and is empty.
         /// </summary>
+        /// <param name="cancellationToken">A cancellation token that can be used to abort the dequeue operation.</param>
         /// <returns>The dequeued item.</returns>
+        /// <exception cref="InvalidOperationException">The producer/consumer queue has been marked complete for adding and is empty.</exception>
+        public T Dequeue(CancellationToken cancellationToken)
+        {
+            return DoDequeueAsync(cancellationToken, sync: true).WaitAndUnwrapException();
+        }
+
+        /// <summary>
+        /// Dequeues an item from the producer/consumer queue. Returns the dequeued item. This method may block the calling thread. Throws <see cref="InvalidOperationException"/> if the producer/consumer queue has completed adding and is empty.
+        /// </summary>
+        /// <returns>The dequeued item.</returns>
+        /// <exception cref="InvalidOperationException">The producer/consumer queue has been marked complete for adding and is empty.</exception>
         public T Dequeue()
         {
             return Dequeue(CancellationToken.None);
