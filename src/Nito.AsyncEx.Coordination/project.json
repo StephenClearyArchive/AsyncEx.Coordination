@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-delta-6",
+  "version": "1.0.0-delta-7",
   "description": "Asynchronous coordination primitives.",
   "authors": [ "Stephen Cleary" ],
   "buildOptions": {
@@ -12,10 +12,17 @@
         "System.Threading": "4.0.11",
         "System.Threading.Tasks": "4.0.11"
       }
+    },
+    "net46": {
+      "frameworkAssemblies": {
+        "System.Runtime": "",
+        "System.Threading": "",
+        "System.Threading.Tasks": ""
+      }
     }
   },
   "dependencies": {
-    "Nito.Collections.Deque": "1.0.0-delta-2",
-    "Nito.AsyncEx.Tasks": "1.0.0-delta-1"
+    "Nito.Collections.Deque": "1.0.0-delta-3",
+    "Nito.AsyncEx.Tasks": "1.0.0-delta-2"
   }
 }
