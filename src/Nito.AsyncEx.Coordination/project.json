@@ -1,9 +1,10 @@
 {
-  "version": "1.0.0-delta-7",
+  "version": "1.0.0-delta-8",
   "description": "Asynchronous coordination primitives.",
   "authors": [ "Stephen Cleary" ],
   "buildOptions": {
-    "warningsAsErrors": true
+    "warningsAsErrors": true,
+    "xmlDoc": true
   },
   "frameworks": {
     "netstandard1.3": {
@@ -22,7 +23,7 @@
     }
   },
   "dependencies": {
-    "Nito.Collections.Deque": "1.0.0-delta-3",
-    "Nito.AsyncEx.Tasks": "1.0.0-delta-2"
+    "Nito.Collections.Deque": "1.0.0-delta-4",
+    "Nito.AsyncEx.Tasks": "1.0.0-delta-3"
   }
 }

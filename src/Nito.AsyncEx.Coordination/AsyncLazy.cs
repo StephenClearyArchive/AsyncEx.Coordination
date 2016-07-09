@@ -72,6 +72,7 @@ namespace Nito.AsyncEx
         /// Initializes a new instance of the <see cref="AsyncLazy&lt;T&gt;"/> class.
         /// </summary>
         /// <param name="factory">The asynchronous delegate that is invoked to produce the value when it is needed. May not be <c>null</c>.</param>
+        /// <param name="flags">Flags to influence async lazy semantics.</param>
         public AsyncLazy(Func<Task<T>> factory, AsyncLazyFlags flags = AsyncLazyFlags.None)
         {
             _factory = factory;

@@ -351,18 +351,5 @@ namespace Nito.AsyncEx
                 get { return _queue._queue.ToArray(); }
             }
         }
-
-        public sealed class DequeueResult
-        {
-            public DequeueResult(bool isSuccess, T value)
-            {
-                Success = isSuccess;
-                Item = value;
-            }
-
-            public bool Success { get; }
-
-            public T Item { get; }
-        }
     }
 }

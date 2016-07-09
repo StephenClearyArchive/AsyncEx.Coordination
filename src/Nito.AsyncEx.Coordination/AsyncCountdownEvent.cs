@@ -126,7 +126,7 @@ namespace Nito.AsyncEx
         /// <summary>
         /// Adds the specified value to the current count.
         /// </summary>
-        /// <param name="signalCount">The amount to change the current count.</param>
+        /// <param name="addCount">The amount to change the current count.</param>
         public void AddCount(long addCount)
         {
             ModifyCount(addCount, true);
