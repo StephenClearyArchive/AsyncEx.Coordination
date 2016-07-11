@@ -23,8 +23,8 @@ namespace UnitTests
         public async Task Locked_PreventsLockUntilUnlocked()
         {
             var monitor = new AsyncMonitor();
-            var task1HasLock = new TaskCompletionSource<object>();
-            var task1Continue = new TaskCompletionSource<object>();
+            var task1HasLock = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
+            var task1Continue = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
 
             var task1 = Task.Run(async () =>
             {
@@ -47,8 +47,8 @@ namespace UnitTests
         {
             var monitor = new AsyncMonitor();
             int completed = 0;
-            var task1Ready = new TaskCompletionSource<object>();
-            var task2Ready = new TaskCompletionSource<object>();
+            var task1Ready = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
+            var task2Ready = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
             var task1 = Task.Run(async () =>
             {
                 using (await monitor.EnterAsync())
@@ -87,8 +87,8 @@ namespace UnitTests
         {
             var monitor = new AsyncMonitor();
             int completed = 0;
-            var task1Ready = new TaskCompletionSource<object>();
-            var task2Ready = new TaskCompletionSource<object>();
+            var task1Ready = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
+            var task2Ready = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
             Task waitTask1 = null;
             var task1 = Task.Run(async () =>
             {

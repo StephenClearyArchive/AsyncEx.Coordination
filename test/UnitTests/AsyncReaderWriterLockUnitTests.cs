@@ -48,8 +48,8 @@ namespace UnitTests
         public async Task WriteLocked_Unlocked_PermitsAnotherWriterLock()
         {
             var rwl = new AsyncReaderWriterLock();
-            var firstWriteLockTaken = new TaskCompletionSource<object>();
-            var releaseFirstWriteLock = new TaskCompletionSource<object>();
+            var firstWriteLockTaken = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
+            var releaseFirstWriteLock = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
             var task = Task.Run(async () =>
             {
                 using (await rwl.WriterLockAsync())

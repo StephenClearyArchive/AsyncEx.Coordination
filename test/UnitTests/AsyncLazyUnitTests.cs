@@ -63,7 +63,7 @@ namespace UnitTests
         [Fact]
         public async Task AsyncLazy_Start_CallsFunc()
         {
-            var tcs = new TaskCompletionSource<object>();
+            var tcs = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
             Func<Task<int>> func = () =>
             {
                 tcs.SetResult(null);
@@ -93,7 +93,7 @@ namespace UnitTests
         public async Task AsyncLazy_MultipleAwaiters_OnlyInvokeFuncOnce()
         {
             int invokeCount = 0;
-            var tcs = new TaskCompletionSource<object>();
+            var tcs = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
             Func<Task<int>> func = async () =>
             {
                 Interlocked.Increment(ref invokeCount);

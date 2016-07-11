@@ -26,8 +26,8 @@ namespace UnitTests
         public async Task AsyncLock_Locked_PreventsLockUntilUnlocked()
         {
             var mutex = new AsyncLock();
-            var task1HasLock = new TaskCompletionSource<object>();
-            var task1Continue = new TaskCompletionSource<object>();
+            var task1HasLock = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
+            var task1Continue = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
 
             var task1 = Task.Run(async () =>
             {
@@ -53,8 +53,8 @@ namespace UnitTests
         public async Task AsyncLock_DoubleDispose_OnlyPermitsOneTask()
         {
             var mutex = new AsyncLock();
-            var task1HasLock = new TaskCompletionSource<object>();
-            var task1Continue = new TaskCompletionSource<object>();
+            var task1HasLock = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
+            var task1Continue = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
 
             await Task.Run(async () =>
             {
@@ -87,10 +87,10 @@ namespace UnitTests
         public async Task AsyncLock_Locked_OnlyPermitsOneLockerAtATime()
         {
             var mutex = new AsyncLock();
-            var task1HasLock = new TaskCompletionSource<object>();
-            var task1Continue = new TaskCompletionSource<object>();
-            var task2HasLock = new TaskCompletionSource<object>();
-            var task2Continue = new TaskCompletionSource<object>();
+            var task1HasLock = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
+            var task1Continue = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
+            var task2HasLock = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
+            var task2Continue = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
 
             var task1 = Task.Run(async () =>
             {
@@ -157,7 +157,7 @@ namespace UnitTests
         {
             var mutex = new AsyncLock();
             var cts = new CancellationTokenSource();
-            var taskReady = new TaskCompletionSource<object>();
+            var taskReady = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
 
             var unlock = await mutex.LockAsync();
             var task = Task.Run(async () =>
