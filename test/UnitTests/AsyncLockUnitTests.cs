@@ -217,5 +217,41 @@ namespace UnitTests
             var mutex = new AsyncLock();
             Assert.NotEqual(0, mutex.Id);
         }
+
+        [Fact]
+        public async Task AsyncLock_SupportsMultipleAsynchronousLocks()
+        {
+            // This test deadlocks with the old AsyncEx: https://github.com/StephenCleary/AsyncEx/issues/57
+
+            await Task.Run(() =>
+            {
+                var asyncLock = new AsyncLock();
+                var cancellationTokenSource = new CancellationTokenSource();
+                var cancellationToken = cancellationTokenSource.Token;
+                var task1 = Task.Run(
+                    async () =>
+                    {
+                        while (!cancellationToken.IsCancellationRequested)
+                        {
+                            using (await asyncLock.LockAsync())
+                            {
+                                Thread.Sleep(10);
+                            }
+                        }
+                    });
+                var task2 = Task.Run(
+                    () =>
+                    {
+                        using (asyncLock.Lock())
+                        {
+                            Thread.Sleep(1000);
+                        }
+                    });
+
+                task2.Wait();
+                cancellationTokenSource.Cancel();
+                task1.Wait();
+            });
+        }
     }
 }
