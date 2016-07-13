@@ -1,10 +1,19 @@
 {
-  "version": "1.0.0-delta-9",
+  "version": "1.0.0-eta-01",
   "description": "Asynchronous coordination primitives.",
   "authors": [ "Stephen Cleary" ],
   "buildOptions": {
     "warningsAsErrors": true,
     "xmlDoc": true
+  },
+  "packOptions": {
+    "tags": [ "async", "asynclock", "asynclazy" ],
+    "projectUrl": "https://github.com/StephenCleary/AsyncEx.Coordination",
+    "licenseUrl": "https://raw.githubusercontent.com/StephenCleary/AsyncEx.Coordination/master/LICENSE",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/StephenCleary/AsyncEx.Coordination.git"
+    }
   },
   "frameworks": {
     "netstandard1.3": {
@@ -16,20 +25,14 @@
     },
     "net46": {
       "frameworkAssemblies": {
-        "System.Runtime": {
-            "type": "build"
-        },
-        "System.Threading": {
-            "type": "build"
-        },
-        "System.Threading.Tasks": {
-            "type": "build"
-        }
+        "System.Runtime": { "type": "build" },
+        "System.Threading": { "type": "build" },
+        "System.Threading.Tasks": { "type": "build" }
       }
     }
   },
   "dependencies": {
-    "Nito.Collections.Deque": "1.0.0-delta-9",
-    "Nito.AsyncEx.Tasks": "1.0.0-delta-4"
+    "Nito.Collections.Deque": "1.0.0-eta-01",
+    "Nito.AsyncEx.Tasks": "1.0.0-eta-01"
   }
 }
