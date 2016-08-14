@@ -111,8 +111,8 @@ namespace UnitTests
         [Fact]
         public void Release_Overflow_ThrowsException()
         {
-            var semaphore = new AsyncSemaphore(int.MaxValue);
-            Assert.Equal(int.MaxValue, semaphore.CurrentCount);
+            var semaphore = new AsyncSemaphore(long.MaxValue);
+            Assert.Equal(long.MaxValue, semaphore.CurrentCount);
             AsyncAssert.Throws<InvalidOperationException>(() => semaphore.Release());
         }
 

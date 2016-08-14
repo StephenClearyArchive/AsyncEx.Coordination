@@ -23,7 +23,7 @@ namespace Nito.AsyncEx
         /// <summary>
         /// The number of waits that will be immediately granted.
         /// </summary>
-        private int _count;
+        private long _count;
 
         /// <summary>
         /// The semi-unique identifier for this instance. This is 0 if the id has not yet been created.
@@ -40,7 +40,7 @@ namespace Nito.AsyncEx
         /// </summary>
         /// <param name="initialCount">The initial count for this semaphore. This must be greater than or equal to zero.</param>
         /// <param name="queue">The wait queue used to manage waiters.</param>
-        public AsyncSemaphore(int initialCount, IAsyncWaitQueue<object> queue)
+        public AsyncSemaphore(long initialCount, IAsyncWaitQueue<object> queue)
         {
             _queue = queue;
             _count = initialCount;
@@ -51,7 +51,7 @@ namespace Nito.AsyncEx
         /// Creates a new async-compatible semaphore with the specified initial count.
         /// </summary>
         /// <param name="initialCount">The initial count for this semaphore. This must be greater than or equal to zero.</param>
-        public AsyncSemaphore(int initialCount)
+        public AsyncSemaphore(long initialCount)
             : this(initialCount, new DefaultAsyncWaitQueue<object>())
         {
         }
@@ -67,7 +67,7 @@ namespace Nito.AsyncEx
         /// <summary>
         /// Gets the number of slots currently available on this semaphore. This member is seldom used; code using this member has a high possibility of race conditions.
         /// </summary>
-        public int CurrentCount
+        public long CurrentCount
         {
             get { lock (_mutex) { return _count; } }
         }
@@ -125,14 +125,14 @@ namespace Nito.AsyncEx
         /// <summary>
         /// Releases the semaphore.
         /// </summary>
-        public void Release(int releaseCount)
+        public void Release(long releaseCount)
         {
             if (releaseCount == 0)
                 return;
 
             lock (_mutex)
             {
-                if (_count > int.MaxValue - releaseCount)
+                if (_count > long.MaxValue - releaseCount)
                     throw new InvalidOperationException("Could not release semaphore.");
 
                 while (releaseCount != 0 && !_queue.IsEmpty)
@@ -165,7 +165,7 @@ namespace Nito.AsyncEx
 
             public int Id { get { return _semaphore.Id; } }
 
-            public int CurrentCount { get { return _semaphore._count; } }
+            public long CurrentCount { get { return _semaphore._count; } }
 
             public IAsyncWaitQueue<object> WaitQueue { get { return _semaphore._queue; } }
         }
