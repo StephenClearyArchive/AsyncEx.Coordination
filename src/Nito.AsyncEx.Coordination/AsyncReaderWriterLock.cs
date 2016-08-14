@@ -31,16 +31,6 @@ namespace Nito.AsyncEx
         private readonly object _mutex;
 
         /// <summary>
-        /// A task that is completed with the reader key object for this lock.
-        /// </summary>
-        private readonly Task<IDisposable> _cachedReaderKeyTask;
-
-        /// <summary>
-        /// A task that is completed with the writer key object for this lock.
-        /// </summary>
-        private readonly Task<IDisposable> _cachedWriterKeyTask;
-
-        /// <summary>
         /// The semi-unique identifier for this instance. This is 0 if the id has not yet been created.
         /// </summary>
         private int _id;
@@ -83,8 +73,6 @@ namespace Nito.AsyncEx
             _writerQueue = writerQueue ?? new DefaultAsyncWaitQueue<IDisposable>();
             _readerQueue = readerQueue ?? new DefaultAsyncWaitQueue<IDisposable>();
             _mutex = new object();
-            _cachedReaderKeyTask = Task.FromResult<IDisposable>(new ReaderKey(this));
-            _cachedWriterKeyTask = Task.FromResult<IDisposable>(new WriterKey(this));
         }
 
         /// <summary>
@@ -128,7 +116,7 @@ namespace Nito.AsyncEx
                 if (_locksHeld >= 0 && _writerQueue.IsEmpty)
                 {
                     ++_locksHeld;
-                    return _cachedReaderKeyTask;
+                    return Task.FromResult<IDisposable>(new ReaderKey(this));
                 }
                 else
                 {
@@ -190,7 +178,7 @@ namespace Nito.AsyncEx
                 if (_locksHeld == 0)
                 {
                     _locksHeld = -1;
-                    ret = _cachedWriterKeyTask;
+                    ret = Task.FromResult<IDisposable>(new WriterKey(this));
                 }
                 else
                 {
@@ -253,14 +241,14 @@ namespace Nito.AsyncEx
             if (!_writerQueue.IsEmpty)
             {
                 _locksHeld = -1;
-                _writerQueue.Dequeue(_cachedWriterKeyTask.Result);
+                _writerQueue.Dequeue(new WriterKey(this));
                 return;
             }
 
             // Then to readers.
             while (!_readerQueue.IsEmpty)
             {
-                _readerQueue.Dequeue(_cachedReaderKeyTask.Result);
+                _readerQueue.Dequeue(new ReaderKey(this));
                 ++_locksHeld;
             }
         }
@@ -292,56 +280,40 @@ namespace Nito.AsyncEx
         /// <summary>
         /// The disposable which releases the reader lock.
         /// </summary>
-        private sealed class ReaderKey : IDisposable
+        private sealed class ReaderKey : SingleDisposable<AsyncReaderWriterLock>
         {
-            /// <summary>
-            /// The lock to release.
-            /// </summary>
-            private readonly AsyncReaderWriterLock _asyncReaderWriterLock;
-
             /// <summary>
             /// Creates the key for a lock.
             /// </summary>
             /// <param name="asyncReaderWriterLock">The lock to release. May not be <c>null</c>.</param>
             public ReaderKey(AsyncReaderWriterLock asyncReaderWriterLock)
+                : base(asyncReaderWriterLock)
             {
-                _asyncReaderWriterLock = asyncReaderWriterLock;
             }
 
-            /// <summary>
-            /// Release the lock.
-            /// </summary>
-            public void Dispose()
+            protected override void Dispose(AsyncReaderWriterLock context)
             {
-                _asyncReaderWriterLock.ReleaseReaderLock();
+                context.ReleaseReaderLock();
             }
         }
 
         /// <summary>
         /// The disposable which releases the writer lock.
         /// </summary>
-        private sealed class WriterKey : IDisposable
+        private sealed class WriterKey : SingleDisposable<AsyncReaderWriterLock>
         {
-            /// <summary>
-            /// The lock to release.
-            /// </summary>
-            private readonly AsyncReaderWriterLock _asyncReaderWriterLock;
-
             /// <summary>
             /// Creates the key for a lock.
             /// </summary>
             /// <param name="asyncReaderWriterLock">The lock to release. May not be <c>null</c>.</param>
             public WriterKey(AsyncReaderWriterLock asyncReaderWriterLock)
+                : base(asyncReaderWriterLock)
             {
-                _asyncReaderWriterLock = asyncReaderWriterLock;
             }
 
-            /// <summary>
-            /// Release the lock.
-            /// </summary>
-            public void Dispose()
+            protected override void Dispose(AsyncReaderWriterLock context)
             {
-                _asyncReaderWriterLock.ReleaseWriterLock();
+                context.ReleaseWriterLock();
             }
         }
 

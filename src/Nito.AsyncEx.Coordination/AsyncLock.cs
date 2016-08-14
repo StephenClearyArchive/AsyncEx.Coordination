@@ -26,11 +26,6 @@ namespace Nito.AsyncEx
         private readonly IAsyncWaitQueue<IDisposable> _queue;
 
         /// <summary>
-        /// A task that is completed with the key object for this lock.
-        /// </summary>
-        private readonly Task<IDisposable> _cachedKeyTask;
-
-        /// <summary>
         /// The semi-unique identifier for this instance. This is 0 if the id has not yet been created.
         /// </summary>
         private int _id;
@@ -55,7 +50,6 @@ namespace Nito.AsyncEx
         public AsyncLock(IAsyncWaitQueue<IDisposable> queue)
         {
             _queue = queue ?? new DefaultAsyncWaitQueue<IDisposable>();
-            _cachedKeyTask = Task.FromResult<IDisposable>(new Key(this));
             _mutex = new object();
         }
 
@@ -80,7 +74,7 @@ namespace Nito.AsyncEx
                 {
                     // If the lock is available, take it immediately.
                     _taken = true;
-                    return _cachedKeyTask;
+                    return Task.FromResult<IDisposable>(new Key(this));
                 }
                 else
                 {
@@ -136,35 +130,27 @@ namespace Nito.AsyncEx
                 if (_queue.IsEmpty)
                     _taken = false;
                 else
-                    _queue.Dequeue(_cachedKeyTask.Result);
+                    _queue.Dequeue(new Key(this));
             }
         }
 
         /// <summary>
         /// The disposable which releases the lock.
         /// </summary>
-        private sealed class Key : IDisposable
+        private sealed class Key : SingleDisposable<AsyncLock>
         {
-            /// <summary>
-            /// The lock to release.
-            /// </summary>
-            private readonly AsyncLock _asyncLock;
-
             /// <summary>
             /// Creates the key for a lock.
             /// </summary>
             /// <param name="asyncLock">The lock to release. May not be <c>null</c>.</param>
             public Key(AsyncLock asyncLock)
+                : base(asyncLock)
             {
-                _asyncLock = asyncLock;
             }
 
-            /// <summary>
-            /// Release the lock.
-            /// </summary>
-            public void Dispose()
+            protected override void Dispose(AsyncLock context)
             {
-                _asyncLock.ReleaseLock();
+                context.ReleaseLock();
             }
         }
 

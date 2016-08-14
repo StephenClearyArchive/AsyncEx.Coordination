@@ -33,6 +33,6 @@
   },
   "dependencies": {
     "Nito.Collections.Deque": "1.0.0-eta-01",
-    "Nito.AsyncEx.Tasks": "1.0.0-eta-01"
+    "Nito.AsyncEx.Tasks": "1.0.0-eta-02"
   }
 }

@@ -53,10 +53,10 @@ namespace Nito.AsyncEx
         public AsyncProducerConsumerQueue(IEnumerable<T> collection, int maxCount)
         {
             if (maxCount <= 0)
-                throw new ArgumentOutOfRangeException("maxCount", "The maximum count must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(maxCount), "The maximum count must be greater than zero.");
             _queue = collection == null ? new Queue<T>() : new Queue<T>(collection);
             if (maxCount < _queue.Count)
-                throw new ArgumentException("The maximum count cannot be less than the number of elements in the collection.", "maxCount");
+                throw new ArgumentException("The maximum count cannot be less than the number of elements in the collection.", nameof(maxCount));
             _maxCount = maxCount;
 
             _mutex = new AsyncLock();
