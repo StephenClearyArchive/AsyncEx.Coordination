@@ -101,11 +101,6 @@ namespace Nito.AsyncEx
             get { return IdManager<AsyncReaderWriterLock>.GetId(ref _id); }
         }
 
-        internal object SyncObject
-        {
-            get { return _mutex; }
-        }
-
         /// <summary>
         /// Applies a continuation to the task that will call <see cref="ReleaseWaiters"/> if the task is canceled. This method may not be called while holding the sync lock.
         /// </summary>
@@ -198,7 +193,7 @@ namespace Nito.AsyncEx
                 else
                 {
                     // Wait for the lock to become available or cancellation.
-                    ret = _writerQueue.Enqueue(SyncObject, cancellationToken);
+                    ret = _writerQueue.Enqueue(_mutex, cancellationToken);
                 }
             }
 
@@ -214,7 +209,7 @@ namespace Nito.AsyncEx
         public IDisposable WriterLock(CancellationToken cancellationToken)
         {
             Task<IDisposable> ret;
-            lock (SyncObject)
+            lock (_mutex)
             {
                 // If the lock is available, take it immediately.
                 if (_locksHeld == 0)
@@ -224,7 +219,7 @@ namespace Nito.AsyncEx
                 }
 
                 // Wait for the lock to become available or cancellation.
-                ret = _writerQueue.Enqueue(SyncObject, cancellationToken);
+                ret = _writerQueue.Enqueue(_mutex, cancellationToken);
             }
 
             ReleaseWaitersWhenCanceled(ret);
@@ -290,7 +285,7 @@ namespace Nito.AsyncEx
         /// </summary>
         internal void ReleaseWriterLock()
         {
-            lock (SyncObject)
+            lock (_mutex)
             {
                 _locksHeld = 0;
                 ReleaseWaiters();

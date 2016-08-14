@@ -65,7 +65,7 @@ namespace Nito.AsyncEx
         }
 
         /// <summary>
-        /// Gets the number of slots currently available on this semaphore.
+        /// Gets the number of slots currently available on this semaphore. This member is seldom used; code using this member has a high possibility of race conditions.
         /// </summary>
         public int CurrentCount
         {

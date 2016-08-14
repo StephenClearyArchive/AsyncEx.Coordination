@@ -121,7 +121,7 @@ namespace Nito.AsyncEx
         }
 
         /// <summary>
-        /// Asynchronously waits for a signal on this condition variable. The associated lock MUST be held when calling this method, and it will still be held when this method returns.
+        /// Asynchronously waits for a signal on this condition variable. The associated lock MUST be held when calling this method, and it will still be held when the returned task completes.
         /// </summary>
         public Task WaitAsync()
         {
