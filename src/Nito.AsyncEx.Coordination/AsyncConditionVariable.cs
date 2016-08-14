@@ -37,11 +37,11 @@ namespace Nito.AsyncEx
         /// Creates an async-compatible condition variable associated with an async-compatible lock.
         /// </summary>
         /// <param name="asyncLock">The lock associated with this condition variable.</param>
-        /// <param name="queue">The wait queue used to manage waiters.</param>
+        /// <param name="queue">The wait queue used to manage waiters. This may be <c>null</c> to use a default (FIFO) queue.</param>
         public AsyncConditionVariable(AsyncLock asyncLock, IAsyncWaitQueue<object> queue)
         {
             _asyncLock = asyncLock;
-            _queue = queue;
+            _queue = queue ?? new DefaultAsyncWaitQueue<object>();
             _mutex = new object();
         }
 
@@ -50,7 +50,7 @@ namespace Nito.AsyncEx
         /// </summary>
         /// <param name="asyncLock">The lock associated with this condition variable.</param>
         public AsyncConditionVariable(AsyncLock asyncLock)
-            : this(asyncLock, new DefaultAsyncWaitQueue<object>())
+            : this(asyncLock, null)
         {
         }
 

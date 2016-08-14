@@ -18,9 +18,11 @@ namespace Nito.AsyncEx
         /// <summary>
         /// Initializes a new awaitable wrapper around the specified task.
         /// </summary>
-        /// <param name="task">The underlying task to wrap.</param>
+        /// <param name="task">The underlying task to wrap. This may not be <c>null</c>.</param>
         public AwaitableDisposable(Task<T> task)
         {
+            if (task == null)
+                throw new ArgumentNullException(nameof(task));
             _task = task;
         }
 

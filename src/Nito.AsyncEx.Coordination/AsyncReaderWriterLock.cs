@@ -76,10 +76,12 @@ namespace Nito.AsyncEx
         /// <summary>
         /// Creates a new async-compatible reader/writer lock.
         /// </summary>
+        /// <param name="writerQueue">The wait queue used to manage waiters for writer locks. This may be <c>null</c> to use a default (FIFO) queue.</param>
+        /// <param name="readerQueue">The wait queue used to manage waiters for reader locks. This may be <c>null</c> to use a default (FIFO) queue.</param>
         public AsyncReaderWriterLock(IAsyncWaitQueue<IDisposable> writerQueue, IAsyncWaitQueue<IDisposable> readerQueue)
         {
-            _writerQueue = writerQueue;
-            _readerQueue = readerQueue;
+            _writerQueue = writerQueue ?? new DefaultAsyncWaitQueue<IDisposable>();
+            _readerQueue = readerQueue ?? new DefaultAsyncWaitQueue<IDisposable>();
             _mutex = new object();
             _cachedReaderKeyTask = Task.FromResult<IDisposable>(new ReaderKey(this));
             _cachedWriterKeyTask = Task.FromResult<IDisposable>(new WriterKey(this));
@@ -89,7 +91,7 @@ namespace Nito.AsyncEx
         /// Creates a new async-compatible reader/writer lock.
         /// </summary>
         public AsyncReaderWriterLock()
-            : this(new DefaultAsyncWaitQueue<IDisposable>(), new DefaultAsyncWaitQueue<IDisposable>())
+            : this(null, null)
         {
         }
 

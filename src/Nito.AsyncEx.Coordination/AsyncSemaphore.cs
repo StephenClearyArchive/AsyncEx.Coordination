@@ -39,10 +39,10 @@ namespace Nito.AsyncEx
         /// Creates a new async-compatible semaphore with the specified initial count.
         /// </summary>
         /// <param name="initialCount">The initial count for this semaphore. This must be greater than or equal to zero.</param>
-        /// <param name="queue">The wait queue used to manage waiters.</param>
+        /// <param name="queue">The wait queue used to manage waiters. This may be <c>null</c> to use a default (FIFO) queue.</param>
         public AsyncSemaphore(long initialCount, IAsyncWaitQueue<object> queue)
         {
-            _queue = queue;
+            _queue = queue ?? new DefaultAsyncWaitQueue<object>();
             _count = initialCount;
             _mutex = new object();
         }
@@ -52,7 +52,7 @@ namespace Nito.AsyncEx
         /// </summary>
         /// <param name="initialCount">The initial count for this semaphore. This must be greater than or equal to zero.</param>
         public AsyncSemaphore(long initialCount)
-            : this(initialCount, new DefaultAsyncWaitQueue<object>())
+            : this(initialCount, null)
         {
         }
 
