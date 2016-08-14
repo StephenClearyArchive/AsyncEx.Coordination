@@ -72,25 +72,32 @@ namespace Nito.AsyncEx
         /// </summary>
         /// <param name="cancellationToken">The cancellation token used to cancel the lock. If this is already set, then this method will attempt to take the lock immediately (succeeding if the lock is currently available).</param>
         /// <returns>A disposable that releases the lock when disposed.</returns>
-        public AwaitableDisposable<IDisposable> LockAsync(CancellationToken cancellationToken)
+        private Task<IDisposable> RequestLockAsync(CancellationToken cancellationToken)
         {
-            Task<IDisposable> ret;
             lock (_mutex)
             {
                 if (!_taken)
                 {
                     // If the lock is available, take it immediately.
                     _taken = true;
-                    ret = _cachedKeyTask;
+                    return _cachedKeyTask;
                 }
                 else
                 {
                     // Wait for the lock to become available or cancellation.
-                    ret = _queue.Enqueue(_mutex, cancellationToken);
+                    return _queue.Enqueue(_mutex, cancellationToken);
                 }
             }
+        }
 
-            return new AwaitableDisposable<IDisposable>(ret);
+        /// <summary>
+        /// Asynchronously acquires the lock. Returns a disposable that releases the lock when disposed.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token used to cancel the lock. If this is already set, then this method will attempt to take the lock immediately (succeeding if the lock is currently available).</param>
+        /// <returns>A disposable that releases the lock when disposed.</returns>
+        public AwaitableDisposable<IDisposable> LockAsync(CancellationToken cancellationToken)
+        {
+            return new AwaitableDisposable<IDisposable>(RequestLockAsync(cancellationToken));
         }
 
         /// <summary>
@@ -108,19 +115,7 @@ namespace Nito.AsyncEx
         /// <param name="cancellationToken">The cancellation token used to cancel the lock. If this is already set, then this method will attempt to take the lock immediately (succeeding if the lock is currently available).</param>
         public IDisposable Lock(CancellationToken cancellationToken)
         {
-            Task<IDisposable> enqueuedTask;
-            lock (_mutex)
-            {
-                if (!_taken)
-                {
-                    _taken = true;
-                    return _cachedKeyTask.Result;
-                }
-
-                enqueuedTask = _queue.Enqueue(_mutex, cancellationToken);
-            }
-
-            return enqueuedTask.WaitAndUnwrapException();
+            return RequestLockAsync(cancellationToken).WaitAndUnwrapException();
         }
 
         /// <summary>

@@ -89,6 +89,7 @@ namespace UnitTests
             var mutex = new AsyncLock();
             var task1HasLock = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
             var task1Continue = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
+            var task2Ready = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
             var task2HasLock = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
             var task2Continue = TaskCompletionSourceExtensions.CreateAsyncTaskSource<object>();
 
@@ -104,12 +105,15 @@ namespace UnitTests
 
             var task2 = Task.Run(async () =>
             {
-                using (await mutex.LockAsync())
+                var key = mutex.LockAsync();
+                task2Ready.SetResult(null);
+                using (await key)
                 {
                     task2HasLock.SetResult(null);
                     await task2Continue.Task;
                 }
             });
+            await task2Ready.Task;
 
             var task3 = Task.Run(async () =>
             {

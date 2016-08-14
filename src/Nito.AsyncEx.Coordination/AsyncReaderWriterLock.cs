@@ -179,7 +179,7 @@ namespace Nito.AsyncEx
         /// </summary>
         /// <param name="cancellationToken">The cancellation token used to cancel the lock. If this is already set, then this method will attempt to take the lock immediately (succeeding if the lock is currently available).</param>
         /// <returns>A disposable that releases the lock when disposed.</returns>
-        public AwaitableDisposable<IDisposable> WriterLockAsync(CancellationToken cancellationToken)
+        private Task<IDisposable> RequestWriterLockAsync(CancellationToken cancellationToken)
         {
             Task<IDisposable> ret;
             lock (_mutex)
@@ -198,32 +198,17 @@ namespace Nito.AsyncEx
             }
 
             ReleaseWaitersWhenCanceled(ret);
-            return new AwaitableDisposable<IDisposable>(ret);
+            return ret;
         }
 
         /// <summary>
-        /// Synchronously acquires the lock as a writer. Returns a disposable that releases the lock when disposed. This method may block the calling thread.
+        /// Asynchronously acquires the lock as a writer. Returns a disposable that releases the lock when disposed.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token used to cancel the lock. If this is already set, then this method will attempt to take the lock immediately (succeeding if the lock is currently available).</param>
         /// <returns>A disposable that releases the lock when disposed.</returns>
-        public IDisposable WriterLock(CancellationToken cancellationToken)
+        public AwaitableDisposable<IDisposable> WriterLockAsync(CancellationToken cancellationToken)
         {
-            Task<IDisposable> ret;
-            lock (_mutex)
-            {
-                // If the lock is available, take it immediately.
-                if (_locksHeld == 0)
-                {
-                    _locksHeld = -1;
-                    return _cachedWriterKeyTask.Result;
-                }
-
-                // Wait for the lock to become available or cancellation.
-                ret = _writerQueue.Enqueue(_mutex, cancellationToken);
-            }
-
-            ReleaseWaitersWhenCanceled(ret);
-            return ret.WaitAndUnwrapException();
+            return new AwaitableDisposable<IDisposable>(RequestWriterLockAsync(cancellationToken));
         }
 
         /// <summary>
@@ -233,6 +218,16 @@ namespace Nito.AsyncEx
         public AwaitableDisposable<IDisposable> WriterLockAsync()
         {
             return WriterLockAsync(CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Synchronously acquires the lock as a writer. Returns a disposable that releases the lock when disposed. This method may block the calling thread.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token used to cancel the lock. If this is already set, then this method will attempt to take the lock immediately (succeeding if the lock is currently available).</param>
+        /// <returns>A disposable that releases the lock when disposed.</returns>
+        public IDisposable WriterLock(CancellationToken cancellationToken)
+        {
+            return RequestWriterLockAsync(cancellationToken).WaitAndUnwrapException();
         }
 
         /// <summary>

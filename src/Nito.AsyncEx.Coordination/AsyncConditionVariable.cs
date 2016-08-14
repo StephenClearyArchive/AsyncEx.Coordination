@@ -134,24 +134,7 @@ namespace Nito.AsyncEx
         /// <param name="cancellationToken">The cancellation signal used to cancel this wait.</param>
         public void Wait(CancellationToken cancellationToken)
         {
-            Task enqueuedTask;
-            lock (_mutex)
-            {
-                // Begin waiting for either a signal or cancellation.
-                enqueuedTask = _queue.Enqueue(_mutex, cancellationToken);
-            }
-
-            // Release the lock while we are waiting.
-            _asyncLock.ReleaseLock();
-
-            // Wait for the signal or cancellation.
-            enqueuedTask.WaitWithoutException();
-
-            // Re-take the lock.
-            _asyncLock.Lock();
-
-            // Propagate the cancellation exception if necessary.
-            enqueuedTask.WaitAndUnwrapException();
+            WaitAsync(cancellationToken).WaitAndUnwrapException();
         }
 
         /// <summary>
