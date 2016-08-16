@@ -132,8 +132,10 @@ namespace Nito.AsyncEx
 
             lock (_mutex)
             {
-                if (_count > long.MaxValue - releaseCount)
-                    throw new InvalidOperationException("Could not release semaphore.");
+                checked
+                {
+                    var test = _count + releaseCount;
+                }
 
                 while (releaseCount != 0 && !_queue.IsEmpty)
                 {

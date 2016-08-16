@@ -113,7 +113,7 @@ namespace UnitTests
         {
             var semaphore = new AsyncSemaphore(long.MaxValue);
             Assert.Equal(long.MaxValue, semaphore.CurrentCount);
-            AsyncAssert.Throws<InvalidOperationException>(() => semaphore.Release());
+            AsyncAssert.Throws<OverflowException>(() => semaphore.Release());
         }
 
         [Fact]
