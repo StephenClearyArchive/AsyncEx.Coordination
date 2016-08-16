@@ -280,7 +280,7 @@ namespace Nito.AsyncEx
         /// <summary>
         /// The disposable which releases the reader lock.
         /// </summary>
-        private sealed class ReaderKey : SingleDisposable<AsyncReaderWriterLock>
+        private sealed class ReaderKey : Disposables.SingleDisposable<AsyncReaderWriterLock>
         {
             /// <summary>
             /// Creates the key for a lock.
@@ -300,7 +300,7 @@ namespace Nito.AsyncEx
         /// <summary>
         /// The disposable which releases the writer lock.
         /// </summary>
-        private sealed class WriterKey : SingleDisposable<AsyncReaderWriterLock>
+        private sealed class WriterKey : Disposables.SingleDisposable<AsyncReaderWriterLock>
         {
             /// <summary>
             /// Creates the key for a lock.

@@ -137,7 +137,7 @@ namespace Nito.AsyncEx
         /// <summary>
         /// The disposable which releases the lock.
         /// </summary>
-        private sealed class Key : SingleDisposable<AsyncLock>
+        private sealed class Key : Disposables.SingleDisposable<AsyncLock>
         {
             /// <summary>
             /// Creates the key for a lock.
