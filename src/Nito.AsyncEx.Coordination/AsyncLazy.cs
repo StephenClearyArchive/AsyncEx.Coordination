@@ -100,7 +100,11 @@ namespace Nito.AsyncEx
         /// </summary>
         public bool IsStarted
         {
-            get { return _instance.IsValueCreated; }
+            get
+            {
+                lock (_mutex)
+                    return _instance.IsValueCreated;
+            }
         }
 
         /// <summary>
@@ -108,7 +112,11 @@ namespace Nito.AsyncEx
         /// </summary>
         public Task<T> Task
         {
-            get { return _instance.Value; }
+            get
+            {
+                lock (_mutex)
+                    return _instance.Value;
+            }
         }
 
         private Func<Task<T>> RetryOnFailure(Func<Task<T>> factory)
