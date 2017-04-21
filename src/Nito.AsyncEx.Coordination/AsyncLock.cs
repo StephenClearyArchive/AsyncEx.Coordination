@@ -150,6 +150,29 @@ namespace Nito.AsyncEx
         {
             return Lock(CancellationToken.None);
         }
+        
+        /// <summary>
+        /// Attempts to acquire the lock. Returns true if the current thread acquires the lock; otherwise, false.
+        /// </summary>
+        /// <param name="disposable">The IDisposable if lock is successfully acquired, otherwise null.</param>
+        /// <returns>True if the current thread acquires the lock; otherwise, false.</returns>
+        public bool TryLock(out IDisposable disposable)
+        {
+            lock (_mutex)
+            {
+                if (!_taken)
+                {
+                    // If the lock is available, take it immediately.
+                    _taken = true;
+
+                    disposable = _cachedKeyTask.Result;
+                    return true;
+                }
+                
+                disposable = null;
+                return false;
+            }
+        }
 
         /// <summary>
         /// Releases the lock.
